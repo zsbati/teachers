@@ -37,20 +37,25 @@ class Task(models.Model):
 class WorkSession(models.Model):
     ENTRY_TYPE_CHOICES = [
         ('manual', 'Manual Hours Input'),
-        ('clock', 'Clock In/Out')
+        ('clock', 'Clock In/Out'),
+        ('time_range', 'Time Range'),
     ]
 
     teacher = models.ForeignKey(Teacher, on_delete=models.CASCADE)
     task = models.ForeignKey(Task, on_delete=models.CASCADE)
     entry_type = models.CharField(max_length=10, choices=ENTRY_TYPE_CHOICES)
-    
+
     # For manual entry
     manual_hours = models.DecimalField(max_digits=5, decimal_places=2, null=True, blank=True)
-    
+
     # For clock in/out
     clock_in = models.DateTimeField(null=True, blank=True)
     clock_out = models.DateTimeField(null=True, blank=True)
-    
+
+    # For time range entry
+    start_time = models.DateTimeField(null=True, blank=True)
+    end_time = models.DateTimeField(null=True, blank=True)
+
     created_at = models.DateTimeField(auto_now_add=True)
     total_amount = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
 
@@ -62,11 +67,17 @@ class WorkSession(models.Model):
             duration = self.clock_out - self.clock_in
             hours = Decimal(str(duration.total_seconds() / 3600))  # Convert to Decimal
             self.total_amount = self.task.hourly_rate * hours
+        elif self.entry_type == 'time_range' and self.start_time and self.end_time:
+            duration = self.end_time - self.start_time
+            hours = Decimal(str(duration.total_seconds() / 3600))  # Convert to Decimal
+            self.total_amount = self.task.hourly_rate * hours
         super().save(*args, **kwargs)
 
     def __str__(self):
         if self.entry_type == 'manual':
             return f"{self.teacher} - {self.task} - {self.manual_hours} hours"
+        elif self.entry_type == 'time_range':
+            return f"{self.teacher} - {self.task} - {self.start_time} to {self.end_time}"
         return f"{self.teacher} - {self.task} - {self.clock_in} to {self.clock_out}"
 
 

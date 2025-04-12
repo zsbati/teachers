@@ -5,19 +5,23 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.utils import timezone
 from .forms import (
     CustomPasswordChangeForm, TeacherCreationForm, TaskForm,
-    WorkSessionManualForm, WorkSessionClockForm
+    WorkSessionManualForm, WorkSessionClockForm, WorkSessionTimeRangeForm
 )
 from .models import Teacher, CustomUser, Task, WorkSession
+
 
 def is_superuser(user):
     return user.is_superuser
 
+
 def is_teacher(user):
     return user.is_teacher
+
 
 @login_required
 def dashboard(request):
     return render(request, 'dashboard.html')
+
 
 @login_required
 def change_password(request):
@@ -32,8 +36,9 @@ def change_password(request):
             messages.error(request, 'Please correct the errors below.')
     else:
         form = CustomPasswordChangeForm(request.user)
-    
+
     return render(request, 'change_password.html', {'form': form})
+
 
 @login_required
 @user_passes_test(is_superuser)
@@ -44,6 +49,7 @@ def manage_teachers(request):
         'teachers': teachers,
         'form': form
     })
+
 
 @login_required
 @user_passes_test(is_superuser)
@@ -66,6 +72,7 @@ def add_teacher(request):
             return redirect('manage_teachers')
     return redirect('manage_teachers')
 
+
 @login_required
 @user_passes_test(is_superuser)
 def remove_teacher(request, teacher_id):
@@ -76,6 +83,7 @@ def remove_teacher(request, teacher_id):
         user.delete()
         messages.success(request, 'Teacher was successfully removed!')
     return redirect('manage_teachers')
+
 
 @login_required
 @user_passes_test(is_superuser)
@@ -89,11 +97,12 @@ def manage_tasks(request):
             return redirect('manage_tasks')
     else:
         form = TaskForm()
-    
+
     return render(request, 'manage_tasks.html', {
         'tasks': tasks,
         'form': form
     })
+
 
 @login_required
 @user_passes_test(is_superuser)
@@ -107,11 +116,12 @@ def edit_task(request, task_id):
             return redirect('manage_tasks')
     else:
         form = TaskForm(instance=task)
-    
+
     return render(request, 'edit_task.html', {
         'form': form,
         'task': task
     })
+
 
 @login_required
 @user_passes_test(is_superuser)
@@ -122,11 +132,13 @@ def remove_task(request, task_id):
         messages.success(request, 'Task was successfully removed!')
     return redirect('manage_tasks')
 
+
 @login_required
 @user_passes_test(is_teacher)
 def record_work(request):
     if request.method == 'POST':
         entry_type = request.POST.get('entry_type')
+
         if entry_type == 'manual':
             form = WorkSessionManualForm(request.POST)
             if form.is_valid():
@@ -136,6 +148,7 @@ def record_work(request):
                 work_session.save()
                 messages.success(request, 'Work hours recorded successfully!')
                 return redirect('record_work')
+
         elif entry_type == 'clock':
             form = WorkSessionClockForm(request.POST)
             if form.is_valid():
@@ -146,28 +159,42 @@ def record_work(request):
                 work_session.save()
                 messages.success(request, 'Clock-in recorded successfully!')
                 return redirect('record_work')
+
+        elif entry_type == 'time_range':
+            form = WorkSessionTimeRangeForm(request.POST)
+            if form.is_valid():
+                work_session = form.save(commit=False)
+                work_session.teacher = request.user.teacher
+                work_session.entry_type = 'time_range'
+                work_session.save()
+                messages.success(request, 'Work hours recorded successfully with a time range!')
+                return redirect('record_work')
+
     else:
         manual_form = WorkSessionManualForm()
         clock_form = WorkSessionClockForm()
-    
+        time_range_form = WorkSessionTimeRangeForm()
+
     active_session = WorkSession.objects.filter(
         teacher=request.user.teacher,
         entry_type='clock',
         clock_out__isnull=True
     ).first()
-    
+
     completed_sessions = WorkSession.objects.filter(
         teacher=request.user.teacher
     ).exclude(
         id=active_session.id if active_session else None
     ).order_by('-created_at')[:10]
-    
+
     return render(request, 'record_work.html', {
         'manual_form': manual_form,
         'clock_form': clock_form,
+        'time_range_form': time_range_form,
         'active_session': active_session,
-        'completed_sessions': completed_sessions
+        'completed_sessions': completed_sessions,
     })
+
 
 @login_required
 @user_passes_test(is_teacher)

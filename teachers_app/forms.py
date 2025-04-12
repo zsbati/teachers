@@ -2,6 +2,7 @@ from django import forms
 from django.contrib.auth.forms import PasswordChangeForm
 from .models import Teacher, CustomUser, Task, WorkSession
 
+
 class CustomPasswordChangeForm(PasswordChangeForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -9,12 +10,13 @@ class CustomPasswordChangeForm(PasswordChangeForm):
         for field in self.fields.values():
             field.widget.attrs['class'] = 'form-control'
 
+
 class TeacherCreationForm(forms.Form):
     username = forms.CharField(max_length=150, widget=forms.TextInput(attrs={'class': 'form-control'}))
     password = forms.CharField(widget=forms.PasswordInput(attrs={'class': 'form-control'}))
     confirm_password = forms.CharField(widget=forms.PasswordInput(attrs={'class': 'form-control'}))
     subjects = forms.CharField(
-        max_length=200, 
+        max_length=200,
         required=False,
         widget=forms.TextInput(attrs={
             'class': 'form-control',
@@ -34,6 +36,7 @@ class TeacherCreationForm(forms.Form):
         if username and CustomUser.objects.filter(username=username).exists():
             raise forms.ValidationError("Username already exists")
 
+
 class TaskForm(forms.ModelForm):
     class Meta:
         model = Task
@@ -43,6 +46,7 @@ class TaskForm(forms.ModelForm):
             'hourly_rate': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01'}),
             'description': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
         }
+
 
 class WorkSessionManualForm(forms.ModelForm):
     class Meta:
@@ -57,10 +61,21 @@ class WorkSessionManualForm(forms.ModelForm):
         super().__init__(*args, **kwargs)
         self.fields['manual_hours'].label = 'Hours Worked'
 
+
 class WorkSessionClockForm(forms.ModelForm):
     class Meta:
         model = WorkSession
         fields = ['task']
         widgets = {
             'task': forms.Select(attrs={'class': 'form-control'}),
+        }
+
+
+class WorkSessionTimeRangeForm(forms.ModelForm):
+    class Meta:
+        model = WorkSession
+        fields = ['task', 'start_time', 'end_time']
+        widgets = {
+            'start_time': forms.DateTimeInput(attrs={'type': 'datetime-local'}),
+            'end_time': forms.DateTimeInput(attrs={'type': 'datetime-local'}),
         }
