@@ -1,0 +1,58 @@
+{% extends 'base.html' %}
+
+{% block title %}Dashboard{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="card-header">
+        <h3>Welcome, {{ user.username }}</h3>
+    </div>
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-6">
+                <div class="card mb-3">
+                    <div class="card-body">
+                        <h5 class="card-title">Your Role</h5>
+                        <p class="card-text">
+                            {% if user.is_superuser %}
+                                Super User
+                            {% elif user.is_inspector %}
+                                Inspector
+                            {% elif user.is_teacher %}
+                                Teacher
+                            {% else %}
+                                Standard User
+                            {% endif %}
+                        </p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">Quick Actions</h5>
+                        <ul class="list-group">
+                            {% if user.is_superuser %}
+                                <li class="list-group-item">
+                                    <a href="{% url 'manage_teachers' %}" class="text-decoration-none">Manage Teachers</a>
+                                </li>
+                                <li class="list-group-item">
+                                    <a href="{% url 'manage_tasks' %}" class="text-decoration-none">Manage Tasks</a>
+                                </li>
+                            {% endif %}
+                            {% if user.is_teacher %}
+                                <li class="list-group-item">
+                                    <a href="{% url 'record_work' %}" class="text-decoration-none">Record Work</a>
+                                </li>
+                            {% endif %}
+                            <li class="list-group-item">
+                                <a href="{% url 'change_password' %}" class="text-decoration-none">Change Password</a>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

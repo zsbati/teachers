@@ -83,6 +83,11 @@ AUTH_PASSWORD_VALIDATORS = [
 # Custom user model
 AUTH_USER_MODEL = 'teachers_app.CustomUser'
 
+# Login/Logout Settings
+LOGIN_REDIRECT_URL = '/dashboard/'  # Redirect to dashboard after login
+LOGOUT_REDIRECT_URL = '/login/'  # Redirect to login page after logout
+LOGIN_URL = '/login/'  # Where to redirect if user is not logged in
+
 # Internationalization
 LANGUAGE_CODE = 'en-us'
 TIME_ZONE = 'UTC'

@@ -1,0 +1,79 @@
+{% extends 'base.html' %}
+
+{% block title %}Manage Tasks{% endblock %}
+
+{% block content %}
+<div class="row">
+    <!-- Add Task Form -->
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <h3>Add New Task</h3>
+            </div>
+            <div class="card-body">
+                <form method="post">
+                    {% csrf_token %}
+                    {% for field in form %}
+                        <div class="mb-3">
+                            <label for="{{ field.id_for_label }}" class="form-label">{{ field.label }}</label>
+                            {{ field }}
+                            {% if field.errors %}
+                                {% for error in field.errors %}
+                                    <div class="text-danger">{{ error }}</div>
+                                {% endfor %}
+                            {% endif %}
+                        </div>
+                    {% endfor %}
+                    <button type="submit" class="btn btn-primary">Add Task</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tasks List -->
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h3>Current Tasks</h3>
+            </div>
+            <div class="card-body">
+                {% if tasks %}
+                    <div class="table-responsive">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Hourly Rate</th>
+                                    <th>Description</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for task in tasks %}
+                                    <tr>
+                                        <td>{{ task.name }}</td>
+                                        <td>${{ task.hourly_rate }}</td>
+                                        <td>{{ task.description|truncatechars:50 }}</td>
+                                        <td>
+                                            <a href="{% url 'edit_task' task.id %}" class="btn btn-warning btn-sm">Edit</a>
+                                            <form method="post" action="{% url 'remove_task' task.id %}" style="display: inline;">
+                                                {% csrf_token %}
+                                                <button type="submit" class="btn btn-danger btn-sm" 
+                                                        onclick="return confirm('Are you sure you want to remove this task?')">
+                                                    Remove
+                                                </button>
+                                            </form>
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <p>No tasks found.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
