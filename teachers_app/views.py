@@ -66,15 +66,26 @@ def change_password(request):
 
 @login_required
 @user_passes_test(lambda u: u.is_superuser)
-@login_required
-@user_passes_test(lambda u: u.is_superuser)
 def manage_teachers(request):
     if request.method == "POST":
         form = AddTeacherForm(request.POST)
         if form.is_valid():
-            form.save()
-            print("Teacher added successfully!")
+            # Create user
+            user = CustomUser.objects.create_user(
+                username=form.cleaned_data['username'],
+                email=form.cleaned_data['email'],
+                password=form.cleaned_data['password'],
+                is_teacher=True
+            )
+            # Create teacher
+            Teacher.objects.create(
+                user=user,
+                subjects=form.cleaned_data['subjects']
+            )
+            messages.success(request, f'Teacher {user.username} was successfully added!')
+            return redirect('manage_teachers')
         else:
+            messages.error(request, 'Please correct the errors below.')
             print("Form errors:", form.errors)  # Debug: Print form errors
     else:
         form = AddTeacherForm()

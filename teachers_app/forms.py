@@ -131,3 +131,16 @@ class AddTeacherForm(forms.Form):
         widget=forms.TextInput(attrs={"class": "form-control"}),
         help_text="Optional: List of subjects taught"
     )
+
+    def clean(self):
+        cleaned_data = super().clean()
+        username = cleaned_data.get('username')
+        email = cleaned_data.get('email')
+
+        if username and CustomUser.objects.filter(username=username).exists():
+            raise forms.ValidationError("Username already exists")
+
+        if email and CustomUser.objects.filter(email=email).exists():
+            raise forms.ValidationError("Email already exists")
+
+        return cleaned_data
