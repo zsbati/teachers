@@ -73,6 +73,24 @@ class WorkSession(models.Model):
             self.total_amount = self.task.hourly_rate * hours
         super().save(*args, **kwargs)
 
+    @property
+    def calculated_hours(self):
+        """
+        Calculate the total hours worked based on the entry type.
+        - Manual: Use `manual_hours`.
+        - Clock: Use `clock_in` and `clock_out`.
+        - Time Range: Use `start_time` and `end_time`.
+        """
+        if self.entry_type == 'manual' and self.manual_hours:
+            return self.manual_hours
+        elif self.entry_type == 'clock' and self.clock_in and self.clock_out:
+            duration = self.clock_out - self.clock_in
+            return duration.total_seconds() / 3600  # Return hours
+        elif self.entry_type == 'time_range' and self.start_time and self.end_time:
+            duration = self.end_time - self.start_time
+            return duration.total_seconds() / 3600  # Return hours
+        return None  # Return None if no valid data
+
     def __str__(self):
         if self.entry_type == 'manual':
             return f"{self.teacher} - {self.task} - {self.manual_hours} hours"

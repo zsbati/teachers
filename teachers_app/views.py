@@ -113,7 +113,7 @@ def manage_tasks(request):
 
 
 @login_required
-@user_passes_test(is_superuser)
+@user_passes_test(lambda u: u.is_superuser)
 def add_teacher(request):
     if request.method == 'POST':
         form = TeacherCreationForm(request.POST)
@@ -121,6 +121,7 @@ def add_teacher(request):
             # Create user
             user = CustomUser.objects.create_user(
                 username=form.cleaned_data['username'],
+                email=form.cleaned_data['email'],  # Retrieve email from the form
                 password=form.cleaned_data['password'],
                 is_teacher=True
             )
@@ -131,7 +132,11 @@ def add_teacher(request):
             )
             messages.success(request, f'Teacher {user.username} was successfully added!')
             return redirect('manage_teachers')
-    return redirect('manage_teachers')
+    else:
+        form = TeacherCreationForm()
+
+    teachers = Teacher.objects.all()
+    return render(request, 'superuser/manage_teachers.html', {'form': form, 'teachers': teachers})
 
 
 @login_required
