@@ -7,9 +7,10 @@ from django.http import HttpResponseForbidden
 from .forms import (
     CustomPasswordChangeForm, TeacherCreationForm, TaskForm,
     WorkSessionManualForm, WorkSessionClockForm, WorkSessionTimeRangeForm, WorkSessionFilterForm, AddTeacherForm,
-    ChangeTeacherPasswordForm
+    ChangeTeacherPasswordForm, SalaryReportForm
 )
-from .models import Teacher, CustomUser, Task, WorkSession
+from .models import Teacher, CustomUser, Task, WorkSession, SalaryReport
+from .services import SalaryCalculationService
 
 
 def is_superuser(user):
@@ -330,4 +331,103 @@ def change_teacher_password(request, teacher_id):
     return render(request, 'superuser/change_teacher_password.html', {
         'form': form,
         'teacher': teacher
+    })
+
+
+@login_required
+@user_passes_test(lambda u: u.is_superuser)
+def create_salary_report(request):
+    if request.method == 'POST':
+        form = SalaryReportForm(request.POST)
+        if form.is_valid():
+            teacher = form.cleaned_data['teacher']
+            year = form.cleaned_data['year']
+            month = int(form.cleaned_data['month'])
+            notes = form.cleaned_data['notes']
+            
+            # Create start and end dates for the month
+            start_date = timezone.datetime(year, month, 1)
+            if month == 12:
+                end_date = timezone.datetime(year + 1, 1, 1)
+            else:
+                end_date = timezone.datetime(year, month + 1, 1)
+            end_date = end_date - timezone.timedelta(microseconds=1)
+            
+            # Create the report
+            report = SalaryReport.objects.create(
+                teacher=teacher,
+                start_date=start_date,
+                end_date=end_date,
+                created_by=request.user,
+                notes=notes
+            )
+            
+            # Calculate salary details
+            calculation_service = SalaryCalculationService()
+            report_data = calculation_service.calculate_salary(teacher, year, month)
+            
+            messages.success(request, f'Salary report created for {teacher.user.username} - {report_data["period"]}')
+            return redirect('view_salary_report', teacher_id=teacher.id, year=year, month=month)
+    else:
+        form = SalaryReportForm()
+    
+    return render(request, 'superuser/create_salary_report.html', {
+        'form': form
+    })
+
+
+@login_required
+@user_passes_test(lambda u: u.is_superuser)
+def view_salary_report(request, teacher_id, year, month):
+    teacher = get_object_or_404(Teacher, id=teacher_id)
+    
+    # Get the report for this month
+    start_date = timezone.datetime(year, month, 1)
+    if month == 12:
+        end_date = timezone.datetime(year + 1, 1, 1)
+    else:
+        end_date = timezone.datetime(year, month + 1, 1)
+    end_date = end_date - timezone.timedelta(microseconds=1)
+    
+    report = get_object_or_404(SalaryReport, 
+                             teacher=teacher, 
+                             start_date=start_date,
+                             end_date=end_date)
+    
+    # Calculate the report data
+    calculation_service = SalaryCalculationService()
+    report_data = calculation_service.calculate_salary(teacher, year, month)
+    
+    return render(request, 'superuser/view_salary_report.html', {
+        'teacher': teacher,
+        'report': report,
+        'report_data': report_data
+    })
+
+
+@login_required
+@user_passes_test(lambda u: u.is_superuser)
+def list_salary_reports(request, teacher_id=None):
+    if teacher_id:
+        teacher = get_object_or_404(Teacher, id=teacher_id)
+        reports = SalaryReport.objects.filter(teacher=teacher).order_by('-start_date')
+    else:
+        teacher = None
+        reports = SalaryReport.objects.all().order_by('-start_date')
+    
+    # For each report, calculate the salary
+    calculation_service = SalaryCalculationService()
+    reports_with_data = []
+    for report in reports:
+        year = report.start_date.year
+        month = report.start_date.month
+        report_data = calculation_service.calculate_salary(report.teacher, year, month)
+        reports_with_data.append({
+            'report': report,
+            'total_salary': report_data['total_salary']
+        })
+    
+    return render(request, 'superuser/list_salary_reports.html', {
+        'teacher': teacher,
+        'reports': reports_with_data
     })

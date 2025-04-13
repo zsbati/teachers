@@ -3,6 +3,7 @@ from django.contrib.auth.models import AbstractUser, Permission
 from django.contrib.contenttypes.models import ContentType
 from django.utils import timezone
 from decimal import Decimal
+from django.db.models import Sum, F
 
 
 # Custom User Model
@@ -149,6 +150,17 @@ class SuperUser(Inspector):
             subjects=subjects or ""
         )
 
+    def create_salary_report(self, teacher_id, year, month, notes=""):
+        """Create a salary report for a teacher for a specific month"""
+        teacher = Teacher.objects.get(id=teacher_id)
+        return SalaryReport.create_for_month(
+            teacher=teacher,
+            year=year,
+            month=month,
+            created_by=self.user,
+            notes=notes
+        )
+
     def remove_teacher(self, teacher_id):
         """Remove a teacher"""
         teacher = Teacher.objects.get(id=teacher_id)
@@ -172,3 +184,16 @@ class SuperUser(Inspector):
         user = CustomUser.objects.get(id=user_id)
         user.set_password(new_password)
         user.save()
+
+
+# Salary Report Model
+class SalaryReport(models.Model):
+    teacher = models.ForeignKey(Teacher, on_delete=models.CASCADE)
+    start_date = models.DateTimeField()
+    end_date = models.DateTimeField()
+    created_at = models.DateTimeField(auto_now_add=True)
+    created_by = models.ForeignKey(CustomUser, on_delete=models.SET_NULL, null=True)
+    notes = models.TextField(blank=True)
+
+    def __str__(self):
+        return f"Salary Report - {self.teacher} ({self.start_date.strftime('%B %Y')})"

@@ -1,6 +1,6 @@
 from django import forms
 from django.contrib.auth.forms import PasswordChangeForm
-from .models import Teacher, CustomUser, Task, WorkSession
+from .models import Teacher, CustomUser, Task, WorkSession, SalaryReport
 
 
 class CustomPasswordChangeForm(PasswordChangeForm):
@@ -167,3 +167,28 @@ class ChangeTeacherPasswordForm(forms.Form):
             raise forms.ValidationError("Passwords do not match")
 
         return cleaned_data
+
+
+class SalaryReportForm(forms.Form):
+    teacher = forms.ModelChoiceField(
+        queryset=Teacher.objects.all(),
+        required=True,
+        label="Teacher",
+        widget=forms.Select(attrs={"class": "form-control"})
+    )
+    year = forms.IntegerField(
+        required=True,
+        label="Year",
+        widget=forms.NumberInput(attrs={"class": "form-control"})
+    )
+    month = forms.ChoiceField(
+        choices=[(i, i) for i in range(1, 13)],
+        required=True,
+        label="Month",
+        widget=forms.Select(attrs={"class": "form-control"})
+    )
+    notes = forms.CharField(
+        required=False,
+        label="Notes",
+        widget=forms.Textarea(attrs={"class": "form-control", "rows": 3})
+    )
