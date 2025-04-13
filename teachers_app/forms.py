@@ -79,3 +79,12 @@ class WorkSessionTimeRangeForm(forms.ModelForm):
             'start_time': forms.DateTimeInput(attrs={'type': 'datetime-local'}),
             'end_time': forms.DateTimeInput(attrs={'type': 'datetime-local'}),
         }
+
+
+class WorkSessionFilterForm(forms.Form):
+    """
+    Form for filtering recent work sessions.
+    """
+    task = forms.ModelChoiceField(queryset=Task.objects.all(), required=False, label="Task")
+    start_date = forms.DateField(required=False, widget=forms.DateInput(attrs={'type': 'date'}), label="Start Date")
+    end_date = forms.DateField(required=False, widget=forms.DateInput(attrs={'type': 'date'}), label="End Date")

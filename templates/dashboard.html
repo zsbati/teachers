@@ -15,13 +15,13 @@
                         <h5 class="card-title">Your Role</h5>
                         <p class="card-text">
                             {% if user.is_superuser %}
-                                Super User
+                            Super User
                             {% elif user.is_inspector %}
-                                Inspector
+                            Inspector
                             {% elif user.is_teacher %}
-                                Teacher
+                            Teacher
                             {% else %}
-                                Standard User
+                            Standard User
                             {% endif %}
                         </p>
                     </div>
@@ -33,17 +33,21 @@
                         <h5 class="card-title">Quick Actions</h5>
                         <ul class="list-group">
                             {% if user.is_superuser %}
-                                <li class="list-group-item">
-                                    <a href="{% url 'manage_teachers' %}" class="text-decoration-none">Manage Teachers</a>
-                                </li>
-                                <li class="list-group-item">
-                                    <a href="{% url 'manage_tasks' %}" class="text-decoration-none">Manage Tasks</a>
-                                </li>
+                            <li class="list-group-item">
+                                <a href="{% url 'manage_teachers' %}" class="text-decoration-none">Manage Teachers</a>
+                            </li>
+                            <li class="list-group-item">
+                                <a href="{% url 'manage_tasks' %}" class="text-decoration-none">Manage Tasks</a>
+                            </li>
                             {% endif %}
                             {% if user.is_teacher %}
-                                <li class="list-group-item">
-                                    <a href="{% url 'record_work' %}" class="text-decoration-none">Record Work</a>
-                                </li>
+                            <li class="list-group-item">
+                                <a href="{% url 'record_work' %}" class="text-decoration-none">Record Work</a>
+                            </li>
+                            <li class="list-group-item">
+                                <a href="{% url 'recent_work_sessions' %}" class="text-decoration-none">Recent Work
+                                    Sessions</a>
+                            </li>
                             {% endif %}
                             <li class="list-group-item">
                                 <a href="{% url 'change_password' %}" class="text-decoration-none">Change Password</a>

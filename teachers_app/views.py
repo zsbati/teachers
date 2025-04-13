@@ -5,7 +5,7 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.utils import timezone
 from .forms import (
     CustomPasswordChangeForm, TeacherCreationForm, TaskForm,
-    WorkSessionManualForm, WorkSessionClockForm, WorkSessionTimeRangeForm
+    WorkSessionManualForm, WorkSessionClockForm, WorkSessionTimeRangeForm, WorkSessionFilterForm
 )
 from .models import Teacher, CustomUser, Task, WorkSession
 
@@ -211,3 +211,25 @@ def clock_out(request, session_id):
         session.save()
         messages.success(request, 'Clocked out successfully!')
     return redirect('record_work')
+
+
+def recent_work_sessions(request):
+    """
+    View to display recent work sessions with optional filtering.
+    """
+    completed_sessions = WorkSession.objects.all().order_by('-created_at')
+    form = WorkSessionFilterForm(request.GET or None)
+
+    if form.is_valid():
+        if form.cleaned_data.get('task'):
+            completed_sessions = completed_sessions.filter(task=form.cleaned_data['task'])
+        if form.cleaned_data.get('start_date'):
+            completed_sessions = completed_sessions.filter(created_at__date__gte=form.cleaned_data['start_date'])
+        if form.cleaned_data.get('end_date'):
+            completed_sessions = completed_sessions.filter(created_at__date__lte=form.cleaned_data['end_date'])
+
+    context = {
+        'completed_sessions': completed_sessions,
+        'form': form,
+    }
+    return render(request, 'recent_work_sessions.html', context)

@@ -96,52 +96,5 @@
             </div>
         </div>
     </div>
-
-    <!-- Recent Work Sessions -->
-    <div class="col-12">
-        <div class="card">
-            <div class="card-header">
-                <h3>Recent Work Sessions</h3>
-            </div>
-            <div class="card-body">
-                {% if completed_sessions %}
-                <div class="table-responsive">
-                    <table class="table">
-                        <thead>
-                        <tr>
-                            <th>Date</th>
-                            <th>Task</th>
-                            <th>Type</th>
-                            <th>Hours</th>
-                            <th>Amount</th>
-                        </tr>
-                        </thead>
-                        <tbody>
-                        {% for session in completed_sessions %}
-                        <tr>
-                            <td>{{ session.created_at|date:"Y-m-d H:i" }}</td>
-                            <td>{{ session.task.name }}</td>
-                            <td>{{ session.get_entry_type_display }}</td>
-                            <td>
-                                {% if session.entry_type == 'manual' %}
-                                {{ session.manual_hours }}
-                                {% elif session.entry_type == 'time_range' %}
-                                {{ session.end_time|timeuntil:session.start_time }}
-                                {% else %}
-                                {{ session.clock_out|timeuntil:session.clock_in }}
-                                {% endif %}
-                            </td>
-                            <td>${{ session.total_amount }}</td>
-                        </tr>
-                        {% endfor %}
-                        </tbody>
-                    </table>
-                </div>
-                {% else %}
-                <p>No recent work sessions found.</p>
-                {% endif %}
-            </div>
-        </div>
-    </div>
 </div>
 {% endblock %}
