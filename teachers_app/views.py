@@ -5,7 +5,7 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.utils import timezone
 from .forms import (
     CustomPasswordChangeForm, TeacherCreationForm, TaskForm,
-    WorkSessionManualForm, WorkSessionClockForm, WorkSessionTimeRangeForm, WorkSessionFilterForm
+    WorkSessionManualForm, WorkSessionClockForm, WorkSessionTimeRangeForm, WorkSessionFilterForm, AddTeacherForm
 )
 from .models import Teacher, CustomUser, Task, WorkSession
 
@@ -64,14 +64,51 @@ def change_password(request):
 
 
 @login_required
-@user_passes_test(is_superuser)
+@user_passes_test(lambda u: u.is_superuser)
+@login_required
+@user_passes_test(lambda u: u.is_superuser)
 def manage_teachers(request):
+    if request.method == "POST":
+        form = AddTeacherForm(request.POST)
+        if form.is_valid():
+            form.save()
+            print("Teacher added successfully!")
+        else:
+            print("Form errors:", form.errors)  # Debug: Print form errors
+    else:
+        form = AddTeacherForm()
+
     teachers = Teacher.objects.all()
-    form = TeacherCreationForm()
-    return render(request, 'manage_teachers.html', {
+    print(f"Teachers in view: {teachers}")  # Debug: Print teachers in the view
+
+    context = {
+        'form': form,
         'teachers': teachers,
-        'form': form
-    })
+    }
+    return render(request, 'superuser/manage_teachers.html', context)
+
+
+@login_required
+@user_passes_test(lambda u: u.is_superuser)
+def manage_tasks(request):
+    if request.method == "POST":
+        form = TaskForm(request.POST)
+        if form.is_valid():
+            form.save()
+            print("Task added successfully!")  # Debugging
+        else:
+            print("Form errors:", form.errors)  # Debugging
+    else:
+        form = TaskForm()
+
+    tasks = Task.objects.all()
+    print(f"Tasks in view: {tasks}")  # Debugging
+
+    context = {
+        'form': form,
+        'tasks': tasks,
+    }
+    return render(request, 'superuser/manage_tasks.html', context)
 
 
 @login_required
@@ -106,25 +143,6 @@ def remove_teacher(request, teacher_id):
         user.delete()
         messages.success(request, 'Teacher was successfully removed!')
     return redirect('manage_teachers')
-
-
-@login_required
-@user_passes_test(is_superuser)
-def manage_tasks(request):
-    tasks = Task.objects.all()
-    if request.method == 'POST':
-        form = TaskForm(request.POST)
-        if form.is_valid():
-            form.save()
-            messages.success(request, 'Task was successfully added!')
-            return redirect('manage_tasks')
-    else:
-        form = TaskForm()
-
-    return render(request, 'manage_tasks.html', {
-        'tasks': tasks,
-        'form': form
-    })
 
 
 @login_required

@@ -88,3 +88,8 @@ class WorkSessionFilterForm(forms.Form):
     task = forms.ModelChoiceField(queryset=Task.objects.all(), required=False, label="Task")
     start_date = forms.DateField(required=False, widget=forms.DateInput(attrs={'type': 'date'}), label="Start Date")
     end_date = forms.DateField(required=False, widget=forms.DateInput(attrs={'type': 'date'}), label="End Date")
+
+class AddTeacherForm(forms.ModelForm):
+    class Meta:
+        model = Teacher
+        fields = ['user', 'subjects']  # Ensure these fields exist in the Teacher model
