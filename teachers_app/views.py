@@ -107,9 +107,11 @@ def manage_tasks(request):
     if request.method == "POST":
         form = TaskForm(request.POST)
         if form.is_valid():
-            form.save()
-            print("Task added successfully!")  # Debugging
+            task = form.save()
+            messages.success(request, f'Task "{task.name}" was successfully added!')
+            return redirect('manage_tasks')
         else:
+            messages.error(request, 'Please correct the errors below.')
             print("Form errors:", form.errors)  # Debugging
     else:
         form = TaskForm()

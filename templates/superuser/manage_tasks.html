@@ -1,15 +1,13 @@
 {% extends 'base.html' %}
 
-{% block title %}Manage Teachers{% endblock %}
-
 {% block content %}
 <div class="container mt-4">
     <div class="row">
-        <!-- Add Teacher Form -->
+        <!-- Add Task Form -->
         <div class="col-md-4">
             <div class="card">
                 <div class="card-header">
-                    <h5 class="mb-0">Add New Teacher</h5>
+                    <h5 class="mb-0">Add New Task</h5>
                 </div>
                 <div class="card-body">
                     {% if messages %}
@@ -38,59 +36,55 @@
                                 {% endif %}
                             </div>
                         {% endfor %}
-                        <button type="submit" class="btn btn-primary btn-sm mt-2">Add Teacher</button>
+                        <button type="submit" class="btn btn-primary">Add Task</button>
                     </form>
                 </div>
             </div>
         </div>
 
-        <!-- Current Teachers List -->
+        <!-- Current Tasks List -->
         <div class="col-md-8">
             <div class="card">
                 <div class="card-header">
-                    <h5 class="mb-0">Current Teachers</h5>
+                    <h5 class="mb-0">Current Tasks</h5>
                 </div>
                 <div class="card-body">
-                    {% if teachers %}
                     <div class="table-responsive">
                         <table class="table table-hover">
                             <thead>
                                 <tr>
-                                    <th>Username</th>
-                                    <th>Subjects</th>
+                                    <th>Name</th>
+                                    <th>Hourly Rate</th>
+                                    <th>Description</th>
                                     <th>Actions</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                {% for teacher in teachers %}
+                                {% for task in tasks %}
                                 <tr>
-                                    <td>{{ teacher.user.username }}</td>
-                                    <td>{{ teacher.subjects|default:"Not specified" }}</td>
+                                    <td>{{ task.name }}</td>
+                                    <td>${{ task.hourly_rate }}</td>
+                                    <td>{{ task.description|default:"Not specified"|truncatewords:10 }}</td>
                                     <td>
                                         <div class="btn-group">
-                                            <a href="{% url 'change_teacher_password' teacher.id %}" class="btn btn-warning">
-                                                <i class="fas fa-key"></i> Password
+                                            <a href="{% url 'edit_task' task.id %}" class="btn btn-warning">
+                                                <i class="fas fa-edit"></i> Edit
                                             </a>
-                                            <a href="{% url 'remove_teacher' teacher.id %}" class="btn btn-danger" 
-                                               onclick="return confirm('Are you sure you want to remove this teacher?')">
+                                            <a href="{% url 'remove_task' task.id %}" class="btn btn-danger"
+                                               onclick="return confirm('Are you sure you want to remove this task?')">
                                                 <i class="fas fa-trash"></i> Remove
-                                            </a>
-                                            <a href="{% url 'recent_work_sessions' teacher.id %}" class="btn btn-info">
-                                                <i class="fas fa-history"></i> Sessions
-                                            </a>
-                                            <a href="{% url 'record_work_with_teacher' teacher.id %}" class="btn btn-primary">
-                                                <i class="fas fa-edit"></i> Record
                                             </a>
                                         </div>
                                     </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="4" class="text-center">No tasks found.</td>
                                 </tr>
                                 {% endfor %}
                             </tbody>
                         </table>
                     </div>
-                    {% else %}
-                    <p>No teachers found.</p>
-                    {% endif %}
                 </div>
             </div>
         </div>
