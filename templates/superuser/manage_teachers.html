@@ -33,14 +33,8 @@
                             <td>{{ teacher.user.username }}</td>
                             <td>{{ teacher.subjects|default:"Not specified" }}</td>
                             <td>
-                                <form method="post" action="{% url 'remove_teacher' teacher.id %}"
-                                      style="display: inline;">
-                                    {% csrf_token %}
-                                    <button type="submit" class="btn btn-danger btn-sm"
-                                            onclick="return confirm('Are you sure you want to remove this teacher?')">
-                                        Remove
-                                    </button>
-                                </form>
+                                <a href="{% url 'change_teacher_password' teacher.id %}" class="btn btn-warning btn-sm">Change Password</a>
+                                <a href="{% url 'remove_teacher' teacher.id %}" class="btn btn-danger btn-sm" onclick="return confirm('Are you sure you want to remove this teacher?')">Remove</a>
                                 <a href="{% url 'recent_work_sessions' teacher.id %}" class="btn btn-info btn-sm">
                                     Recent Work Sessions
                                 </a>

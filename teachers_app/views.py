@@ -6,7 +6,8 @@ from django.utils import timezone
 from django.http import HttpResponseForbidden
 from .forms import (
     CustomPasswordChangeForm, TeacherCreationForm, TaskForm,
-    WorkSessionManualForm, WorkSessionClockForm, WorkSessionTimeRangeForm, WorkSessionFilterForm, AddTeacherForm
+    WorkSessionManualForm, WorkSessionClockForm, WorkSessionTimeRangeForm, WorkSessionFilterForm, AddTeacherForm,
+    ChangeTeacherPasswordForm
 )
 from .models import Teacher, CustomUser, Task, WorkSession
 
@@ -306,3 +307,25 @@ def recent_work_sessions(request, teacher_id=None):
         'work_sessions': work_sessions,
     }
     return render(request, 'recent_work_sessions.html', context)
+
+
+@login_required
+@user_passes_test(lambda u: u.is_superuser)
+def change_teacher_password(request, teacher_id):
+    teacher = get_object_or_404(Teacher, id=teacher_id)
+    if request.method == 'POST':
+        form = ChangeTeacherPasswordForm(request.POST)
+        if form.is_valid():
+            teacher.user.set_password(form.cleaned_data['new_password'])
+            teacher.user.save()
+            messages.success(request, f'Password for {teacher.user.username} has been changed successfully!')
+            return redirect('manage_teachers')
+        else:
+            messages.error(request, 'Please correct the errors below.')
+    else:
+        form = ChangeTeacherPasswordForm()
+
+    return render(request, 'superuser/change_teacher_password.html', {
+        'form': form,
+        'teacher': teacher
+    })
