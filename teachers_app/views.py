@@ -254,23 +254,26 @@ def clock_out(request, session_id):
     return redirect('record_work')
 
 
-def recent_work_sessions(request):
-    """
-    View to display recent work sessions with optional filtering.
-    """
-    completed_sessions = WorkSession.objects.all().order_by('-created_at')
-    form = WorkSessionFilterForm(request.GET or None)
+@login_required
+@user_passes_test(lambda u: u.is_superuser or u.is_teacher)  # Allow both roles to access
+def recent_work_sessions(request, teacher_id=None):
+    # Check if the user is a teacher or a superuser
+    if not request.user.is_superuser:
+        # For teachers, get their own teacher instance
+        teacher = get_object_or_404(Teacher, user=request.user)
+    else:
+        # For superusers, get the teacher by ID
+        teacher = get_object_or_404(Teacher, id=teacher_id)
 
-    if form.is_valid():
-        if form.cleaned_data.get('task'):
-            completed_sessions = completed_sessions.filter(task=form.cleaned_data['task'])
-        if form.cleaned_data.get('start_date'):
-            completed_sessions = completed_sessions.filter(created_at__date__gte=form.cleaned_data['start_date'])
-        if form.cleaned_data.get('end_date'):
-            completed_sessions = completed_sessions.filter(created_at__date__lte=form.cleaned_data['end_date'])
+    # Fetch recent work sessions for the teacher
+    work_sessions = WorkSession.objects.filter(teacher=teacher).order_by('-created_at')[:10]
+
+    # Debugging: Print the teacher and work sessions to the console
+    print(f"Teacher: {teacher}")
+    print(f"Work Sessions: {work_sessions}")
 
     context = {
-        'completed_sessions': completed_sessions,
-        'form': form,
+        'teacher': teacher,
+        'work_sessions': work_sessions,
     }
     return render(request, 'recent_work_sessions.html', context)

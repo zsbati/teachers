@@ -14,15 +14,15 @@
                 <form method="post" action="{% url 'add_teacher' %}">
                     {% csrf_token %}
                     {% for field in form %}
-                        <div class="mb-3">
-                            <label for="{{ field.id_for_label }}" class="form-label">{{ field.label }}</label>
-                            {{ field }}
-                            {% if field.errors %}
-                                {% for error in field.errors %}
-                                    <div class="text-danger">{{ error }}</div>
-                                {% endfor %}
-                            {% endif %}
-                        </div>
+                    <div class="mb-3">
+                        <label for="{{ field.id_for_label }}" class="form-label">{{ field.label }}</label>
+                        {{ field }}
+                        {% if field.errors %}
+                        {% for error in field.errors %}
+                        <div class="text-danger">{{ error }}</div>
+                        {% endfor %}
+                        {% endif %}
+                    </div>
                     {% endfor %}
                     <button type="submit" class="btn btn-primary">Add Teacher</button>
                 </form>
@@ -38,36 +38,40 @@
             </div>
             <div class="card-body">
                 {% if teachers %}
-                    <div class="table-responsive">
-                        <table class="table">
-                            <thead>
-                                <tr>
-                                    <th>Username</th>
-                                    <th>Subjects</th>
-                                    <th>Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% for teacher in teachers %}
-                                    <tr>
-                                        <td>{{ teacher.user.username }}</td>
-                                        <td>{{ teacher.subjects|default:"Not specified" }}</td>
-                                        <td>
-                                            <form method="post" action="{% url 'remove_teacher' teacher.id %}" style="display: inline;">
-                                                {% csrf_token %}
-                                                <button type="submit" class="btn btn-danger btn-sm" 
-                                                        onclick="return confirm('Are you sure you want to remove this teacher?')">
-                                                    Remove
-                                                </button>
-                                            </form>
-                                        </td>
-                                    </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
-                    </div>
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead>
+                        <tr>
+                            <th>Username</th>
+                            <th>Subjects</th>
+                            <th>Actions</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        {% for teacher in teachers %}
+                        <tr>
+                            <td>{{ teacher.user.username }}</td>
+                            <td>{{ teacher.subjects|default:"Not specified" }}</td>
+                            <td>
+                                <form method="post" action="{% url 'remove_teacher' teacher.id %}"
+                                      style="display: inline;">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn btn-danger btn-sm"
+                                            onclick="return confirm('Are you sure you want to remove this teacher?')">
+                                        Remove
+                                    </button>
+                                </form>
+                                <a href="{% url 'recent_work_sessions' teacher.id %}" class="btn btn-info btn-sm">
+                                    Recent Work Sessions
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
                 {% else %}
-                    <p>No teachers found.</p>
+                <p>No teachers found.</p>
                 {% endif %}
             </div>
         </div>

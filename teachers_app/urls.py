@@ -20,5 +20,5 @@ urlpatterns = [
     path('remove-task/<int:task_id>/', views.remove_task, name='remove_task'),
     path('record-work/', views.record_work, name='record_work'),
     path('clock-out/<int:session_id>/', views.clock_out, name='clock_out'),
-    path('recent-work-sessions/', views.recent_work_sessions, name='recent_work_sessions'),
+    path('dashboard/recent-work-sessions/<int:teacher_id>/', views.recent_work_sessions, name='recent_work_sessions'),
 ]

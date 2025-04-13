@@ -45,7 +45,8 @@
                                 <a href="{% url 'record_work' %}" class="text-decoration-none">Record Work</a>
                             </li>
                             <li class="list-group-item">
-                                <a href="{% url 'recent_work_sessions' %}" class="text-decoration-none">Recent Work
+                                <a href="{% url 'recent_work_sessions' user.teacher.id %}" class="text-decoration-none">Recent
+                                    Work
                                     Sessions</a>
                             </li>
                             {% endif %}
