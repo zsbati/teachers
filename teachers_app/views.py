@@ -19,8 +19,31 @@ def is_teacher(user):
 
 
 @login_required
-def dashboard(request):
-    return render(request, 'dashboard.html')
+def dashboard_redirect(request):
+    """
+    Redirects the user to the appropriate dashboard based on their role.
+    """
+    if request.user.is_superuser:
+        return redirect('superuser_dashboard')
+    else:
+        return redirect('teachers_dashboard')
+
+
+@login_required
+def teachers_dashboard(request):
+    """
+    View for the teacher's dashboard.
+    """
+    return render(request, 'teachers/dashboard.html')
+
+
+@login_required
+@user_passes_test(lambda u: u.is_superuser)
+def superuser_dashboard(request):
+    """
+    View for the superuser's dashboard.
+    """
+    return render(request, 'superuser/dashboard.html')
 
 
 @login_required

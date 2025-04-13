@@ -3,8 +3,9 @@ from django.contrib.auth import views as auth_views
 from . import views
 
 urlpatterns = [
-    path('', views.dashboard, name='dashboard'),  # Da
-    path('dashboard/', views.dashboard, name='dashboard'),
+    path('', views.dashboard_redirect, name='dashboard'),  # Root path now uses dynamic redirect
+    path('dashboard/teachers/', views.teachers_dashboard, name='teachers_dashboard'),
+    path('dashboard/superuser/', views.superuser_dashboard, name='superuser_dashboard'),
     path('change-password/', views.change_password, name='change_password'),
     path('login/', auth_views.LoginView.as_view(template_name='login.html'), name='login'),
     path('logout/', auth_views.LogoutView.as_view(
