@@ -3,6 +3,7 @@ from django.contrib.auth import update_session_auth_hash
 from django.contrib import messages
 from django.shortcuts import render, redirect, get_object_or_404
 from django.utils import timezone
+from django.http import HttpResponseForbidden
 from .forms import (
     CustomPasswordChangeForm, TeacherCreationForm, TaskForm,
     WorkSessionManualForm, WorkSessionClockForm, WorkSessionTimeRangeForm, WorkSessionFilterForm, AddTeacherForm
@@ -175,8 +176,16 @@ def remove_task(request, task_id):
 
 
 @login_required
-@user_passes_test(is_teacher)
-def record_work(request):
+def record_work(request, teacher_id=None):
+    # Determine the teacher for whom the work is being recorded
+    if not request.user.is_superuser:
+        teacher = get_object_or_404(Teacher, user=request.user)  # Teachers can only record their own work
+    else:
+        if teacher_id:
+            teacher = get_object_or_404(Teacher, id=teacher_id)  # Superusers specify a teacher
+        else:
+            return HttpResponseForbidden("Superusers must specify a teacher to record work for.")
+
     if request.method == 'POST':
         entry_type = request.POST.get('entry_type')
 
@@ -184,46 +193,49 @@ def record_work(request):
             form = WorkSessionManualForm(request.POST)
             if form.is_valid():
                 work_session = form.save(commit=False)
-                work_session.teacher = request.user.teacher
+                work_session.teacher = teacher
                 work_session.entry_type = 'manual'
                 work_session.save()
-                messages.success(request, 'Work hours recorded successfully!')
-                return redirect('record_work')
+                messages.success(request, f'Work hours recorded successfully for {teacher.user.username}!')
+                return redirect('record_work_with_teacher', teacher_id=teacher.id)
 
         elif entry_type == 'clock':
             form = WorkSessionClockForm(request.POST)
             if form.is_valid():
                 work_session = form.save(commit=False)
-                work_session.teacher = request.user.teacher
+                work_session.teacher = teacher
                 work_session.entry_type = 'clock'
                 work_session.clock_in = timezone.now()
                 work_session.save()
-                messages.success(request, 'Clock-in recorded successfully!')
-                return redirect('record_work')
+                messages.success(request, f'Clock-in recorded successfully for {teacher.user.username}!')
+                return redirect('record_work_with_teacher', teacher_id=teacher.id)
 
         elif entry_type == 'time_range':
             form = WorkSessionTimeRangeForm(request.POST)
             if form.is_valid():
                 work_session = form.save(commit=False)
-                work_session.teacher = request.user.teacher
+                work_session.teacher = teacher
                 work_session.entry_type = 'time_range'
                 work_session.save()
-                messages.success(request, 'Work hours recorded successfully with a time range!')
-                return redirect('record_work')
+                messages.success(request,
+                                 f'Work hours recorded successfully with a time range for {teacher.user.username}!')
+                return redirect('record_work_with_teacher', teacher_id=teacher.id)
 
     else:
         manual_form = WorkSessionManualForm()
         clock_form = WorkSessionClockForm()
         time_range_form = WorkSessionTimeRangeForm()
 
+    # Get the active session for the teacher
     active_session = WorkSession.objects.filter(
-        teacher=request.user.teacher,
+        teacher=teacher,
         entry_type='clock',
         clock_out__isnull=True
     ).first()
 
+    # Get completed sessions for the teacher
     completed_sessions = WorkSession.objects.filter(
-        teacher=request.user.teacher
+        teacher=teacher
     ).exclude(
         id=active_session.id if active_session else None
     ).order_by('-created_at')[:10]
@@ -234,6 +246,7 @@ def record_work(request):
         'time_range_form': time_range_form,
         'active_session': active_session,
         'completed_sessions': completed_sessions,
+        'teacher': teacher,
     })
 
 

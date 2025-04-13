@@ -18,7 +18,8 @@ urlpatterns = [
     path('superuser/manage-tasks/', views.manage_tasks, name='manage_tasks'),
     path('edit-task/<int:task_id>/', views.edit_task, name='edit_task'),
     path('remove-task/<int:task_id>/', views.remove_task, name='remove_task'),
-    path('record-work/', views.record_work, name='record_work'),
+    path('record-work/', views.record_work, name='record_work'),  # For teachers recording their own work
+    path('record-work/<int:teacher_id>/', views.record_work, name='record_work_with_teacher'),
     path('clock-out/<int:session_id>/', views.clock_out, name='clock_out'),
     path('dashboard/recent-work-sessions/<int:teacher_id>/', views.recent_work_sessions, name='recent_work_sessions'),
 ]

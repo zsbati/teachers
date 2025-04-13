@@ -64,6 +64,8 @@
                                 <a href="{% url 'recent_work_sessions' teacher.id %}" class="btn btn-info btn-sm">
                                     Recent Work Sessions
                                 </a>
+                                <a href="{% url 'record_work_with_teacher' teacher.id %}"
+                                   class="btn btn-primary btn-sm">Record Work</a>
                             </td>
                         </tr>
                         {% endfor %}
