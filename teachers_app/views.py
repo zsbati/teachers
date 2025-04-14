@@ -344,7 +344,7 @@ def create_salary_report(request):
             year = form.cleaned_data['year']
             month = int(form.cleaned_data['month'])
             notes = form.cleaned_data['notes']
-            
+
             # Create start and end dates for the month
             start_date = timezone.datetime(year, month, 1)
             if month == 12:
@@ -352,7 +352,7 @@ def create_salary_report(request):
             else:
                 end_date = timezone.datetime(year, month + 1, 1)
             end_date = end_date - timezone.timedelta(microseconds=1)
-            
+
             # Create the report
             report = SalaryReport.objects.create(
                 teacher=teacher,
@@ -361,16 +361,15 @@ def create_salary_report(request):
                 created_by=request.user,
                 notes=notes
             )
-            
-            # Calculate salary details
-            calculation_service = SalaryCalculationService()
-            report_data = calculation_service.calculate_salary(teacher, year, month)
-            
+
+            # Calculate salary details - FIXED: Use static method
+            report_data = SalaryCalculationService.calculate_salary(teacher, year, month)
+
             messages.success(request, f'Salary report created for {teacher.user.username} - {report_data["period"]}')
             return redirect('view_salary_report', teacher_id=teacher.id, year=year, month=month)
     else:
         form = SalaryReportForm()
-    
+
     return render(request, 'superuser/create_salary_report.html', {
         'form': form
     })
@@ -380,7 +379,7 @@ def create_salary_report(request):
 @user_passes_test(lambda u: u.is_superuser)
 def view_salary_report(request, teacher_id, year, month):
     teacher = get_object_or_404(Teacher, id=teacher_id)
-    
+
     # Get the report for this month
     start_date = timezone.datetime(year, month, 1)
     if month == 12:
@@ -388,16 +387,15 @@ def view_salary_report(request, teacher_id, year, month):
     else:
         end_date = timezone.datetime(year, month + 1, 1)
     end_date = end_date - timezone.timedelta(microseconds=1)
-    
-    report = get_object_or_404(SalaryReport, 
-                             teacher=teacher, 
-                             start_date=start_date,
-                             end_date=end_date)
-    
-    # Calculate the report data
-    calculation_service = SalaryCalculationService()
-    report_data = calculation_service.calculate_salary(teacher, year, month)
-    
+
+    report = get_object_or_404(SalaryReport,
+                               teacher=teacher,
+                               start_date=start_date,
+                               end_date=end_date)
+
+    # Calculate the report data - FIXED: Use static method
+    report_data = SalaryCalculationService.calculate_salary(teacher, year, month)
+
     return render(request, 'superuser/view_salary_report.html', {
         'teacher': teacher,
         'report': report,
@@ -414,19 +412,18 @@ def list_salary_reports(request, teacher_id=None):
     else:
         teacher = None
         reports = SalaryReport.objects.all().order_by('-start_date')
-    
-    # For each report, calculate the salary
-    calculation_service = SalaryCalculationService()
+
+    # For each report, calculate the salary - FIXED: Use static method
     reports_with_data = []
     for report in reports:
         year = report.start_date.year
         month = report.start_date.month
-        report_data = calculation_service.calculate_salary(report.teacher, year, month)
+        report_data = SalaryCalculationService.calculate_salary(report.teacher, year, month)
         reports_with_data.append({
             'report': report,
             'total_salary': report_data['total_salary']
         })
-    
+
     return render(request, 'superuser/list_salary_reports.html', {
         'teacher': teacher,
         'reports': reports_with_data

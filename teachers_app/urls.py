@@ -14,7 +14,8 @@ urlpatterns = [
     ), name='logout'),
     path('superuser/manage-teachers/', views.manage_teachers, name='manage_teachers'),
     path('superuser/remove-teacher/<int:teacher_id>/', views.remove_teacher, name='remove_teacher'),
-    path('superuser/change-teacher-password/<int:teacher_id>/', views.change_teacher_password, name='change_teacher_password'),
+    path('superuser/change-teacher-password/<int:teacher_id>/', views.change_teacher_password,
+         name='change_teacher_password'),
     path('add-teacher/', views.add_teacher, name='add_teacher'),
     path('superuser/manage-tasks/', views.manage_tasks, name='manage_tasks'),
     path('edit-task/<int:task_id>/', views.edit_task, name='edit_task'),
@@ -23,10 +24,11 @@ urlpatterns = [
     path('record-work/<int:teacher_id>/', views.record_work, name='record_work_with_teacher'),
     path('clock-out/<int:session_id>/', views.clock_out, name='clock_out'),
     path('dashboard/recent-work-sessions/<int:teacher_id>/', views.recent_work_sessions, name='recent_work_sessions'),
-    
+
     # Salary Report URLs
     path('superuser/salary-reports/', views.list_salary_reports, name='list_salary_reports'),
-    path('superuser/salary-reports/teacher/<int:teacher_id>/', views.list_salary_reports, name='list_teacher_salary_reports'),
+    path('superuser/salary-reports/<int:teacher_id>/', views.list_salary_reports, name='list_salary_reports'),
     path('superuser/salary-reports/create/', views.create_salary_report, name='create_salary_report'),
-    path('superuser/salary-reports/<int:teacher_id>/<int:year>/<int:month>/', views.view_salary_report, name='view_salary_report'),
+    path('superuser/salary-reports/<int:teacher_id>/<int:year>/<int:month>/', views.view_salary_report,
+         name='view_salary_report'),
 ]

@@ -1,6 +1,8 @@
 from decimal import Decimal
 from django.utils import timezone
 from .models import Teacher, Task, WorkSession
+import math
+
 
 class SalaryCalculationService:
     @staticmethod
@@ -19,42 +21,48 @@ class SalaryCalculationService:
             teacher=teacher,
             created_at__range=(start_date, end_date)
         ).order_by('created_at')
-        
+
         task_summaries = []
         session_details = []
         total = Decimal('0.00')
-        
+
         # Group work sessions by task
         for task in Task.objects.filter(worksession__in=work_sessions).distinct():
             task_sessions = work_sessions.filter(task=task)
             total_hours = Decimal('0.00')
+
             for session in task_sessions:
-                hours = session.calculated_hours or 0
-                total_hours += Decimal(str(hours))
-            
+                hours = session.calculated_hours
+                if hours is not None:
+                    # Round hours to nearest hour for clock and time_range entries
+                    if session.entry_type in ['clock', 'time_range']:
+                        hours = Decimal(str(math.ceil(hours)))
+                    else:
+                        hours = Decimal(str(hours))
+
+                    total_hours += hours
+                    session_total = hours * task.hourly_rate
+
+                    session_details.append({
+                        'date': session.created_at.date(),
+                        'task_name': task.name,
+                        'hours': float(hours),
+                        'rate': task.hourly_rate,
+                        'total': session_total,
+                        'entry_type': session.entry_type,
+                        'notes': f"{session}"
+                    })
+
             task_total = task.hourly_rate * total_hours
             total += task_total
-            
+
             task_summaries.append({
                 'task_name': task.name,
-                'hours': float(total_hours),  # Convert to float for template display
+                'hours': float(total_hours),
                 'rate': task.hourly_rate,
                 'total': task_total
             })
-            
-            # Add individual session details for this task
-            for session in task_sessions:
-                hours = Decimal(str(session.calculated_hours or 0))
-                session_details.append({
-                    'date': session.created_at.date(),
-                    'task_name': task.name,
-                    'hours': float(hours),  # Convert to float for template display
-                    'rate': task.hourly_rate,
-                    'total': hours * task.hourly_rate,
-                    'entry_type': session.get_entry_type_display(),
-                    'notes': f"{session}"
-                })
-        
+
         return {
             'task_summaries': task_summaries,
             'session_details': sorted(session_details, key=lambda x: x['date']),
