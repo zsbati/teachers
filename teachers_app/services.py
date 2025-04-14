@@ -8,12 +8,12 @@ class SalaryCalculationService:
     @staticmethod
     def calculate_salary(teacher, year, month):
         """Calculate salary details for a teacher in a specific month"""
-        # Calculate start and end dates for the month
-        start_date = timezone.datetime(year, month, 1)
+        # Calculate start and end dates for the month with timezone awareness
+        start_date = timezone.make_aware(timezone.datetime(year, month, 1))
         if month == 12:
-            end_date = timezone.datetime(year + 1, 1, 1)
+            end_date = timezone.make_aware(timezone.datetime(year + 1, 1, 1))
         else:
-            end_date = timezone.datetime(year, month + 1, 1)
+            end_date = timezone.make_aware(timezone.datetime(year, month + 1, 1))
         end_date = end_date - timezone.timedelta(microseconds=1)
 
         # Get work sessions for the period
