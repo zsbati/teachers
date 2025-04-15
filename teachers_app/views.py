@@ -192,11 +192,12 @@ def edit_task(request, task_id):
 @login_required
 @user_passes_test(is_superuser)
 def remove_task(request, task_id):
+    task = get_object_or_404(Task, id=task_id)
     if request.method == 'POST':
-        task = get_object_or_404(Task, id=task_id)
         task.delete()
         messages.success(request, 'Task was successfully removed!')
-    return redirect('manage_tasks')
+        return redirect('manage_tasks')
+    return render(request, 'superuser/confirm_task_removal.html', {'task': task})
 
 
 @login_required

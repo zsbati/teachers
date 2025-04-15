@@ -1,0 +1,21 @@
+{% extends 'base.html' %}
+
+{% block title %}Confirm Task Removal{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="card">
+        <div class="card-header">
+            <h3>Confirm Task Removal</h3>
+        </div>
+        <div class="card-body">
+            <p>Are you sure you want to remove the task "{{ task.title }}"?</p>
+            <form method="post">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-danger">Yes, remove task</button>
+                <a href="{% url 'manage_tasks' %}" class="btn btn-secondary">Cancel</a>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %} 
