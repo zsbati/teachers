@@ -13,30 +13,30 @@
                 </div>
                 <div class="card-body">
                     {% if messages %}
-                        {% for message in messages %}
-                            <div class="alert alert-{{ message.tags }}">
-                                {{ message }}
-                            </div>
-                        {% endfor %}
+                    {% for message in messages %}
+                    <div class="alert alert-{{ message.tags }}">
+                        {{ message }}
+                    </div>
+                    {% endfor %}
                     {% endif %}
-                    
+
                     <form method="post">
                         {% csrf_token %}
                         {% for field in form %}
-                            <div class="form-group mb-2">
-                                <label for="{{ field.id_for_label }}" class="form-label small">{{ field.label }}</label>
-                                {{ field }}
-                                {% if field.help_text %}
-                                    <small class="form-text text-muted">{{ field.help_text }}</small>
-                                {% endif %}
-                                {% if field.errors %}
-                                    {% for error in field.errors %}
-                                        <div class="invalid-feedback d-block">
-                                            {{ error }}
-                                        </div>
-                                    {% endfor %}
-                                {% endif %}
+                        <div class="form-group mb-2">
+                            <label for="{{ field.id_for_label }}" class="form-label small">{{ field.label }}</label>
+                            {{ field }}
+                            {% if field.help_text %}
+                            <small class="form-text text-muted">{{ field.help_text }}</small>
+                            {% endif %}
+                            {% if field.errors %}
+                            {% for error in field.errors %}
+                            <div class="invalid-feedback d-block">
+                                {{ error }}
                             </div>
+                            {% endfor %}
+                            {% endif %}
+                        </div>
                         {% endfor %}
                         <button type="submit" class="btn btn-primary btn-sm mt-2">Add Teacher</button>
                     </form>
@@ -55,36 +55,38 @@
                     <div class="table-responsive">
                         <table class="table table-hover">
                             <thead>
-                                <tr>
-                                    <th>Username</th>
-                                    <th>Subjects</th>
-                                    <th>Actions</th>
-                                </tr>
+                            <tr>
+                                <th>Username</th>
+                                <th>Subjects</th>
+                                <th>Actions</th>
+                            </tr>
                             </thead>
                             <tbody>
-                                {% for teacher in teachers %}
-                                <tr>
-                                    <td>{{ teacher.user.username }}</td>
-                                    <td>{{ teacher.subjects|default:"Not specified" }}</td>
-                                    <td>
-                                        <div class="btn-group">
-                                            <a href="{% url 'change_teacher_password' teacher.id %}" class="btn btn-warning">
-                                                <i class="fas fa-key"></i> Password
-                                            </a>
-                                            <a href="{% url 'remove_teacher' teacher.id %}" class="btn btn-danger" 
-                                               onclick="return confirm('Are you sure you want to remove this teacher?')">
-                                                <i class="fas fa-trash"></i> Remove
-                                            </a>
-                                            <a href="{% url 'recent_work_sessions' teacher.id %}" class="btn btn-info">
-                                                <i class="fas fa-history"></i> Sessions
-                                            </a>
-                                            <a href="{% url 'record_work_with_teacher' teacher.id %}" class="btn btn-primary">
-                                                <i class="fas fa-edit"></i> Record
-                                            </a>
-                                        </div>
-                                    </td>
-                                </tr>
-                                {% endfor %}
+                            {% for teacher in teachers %}
+                            <tr>
+                                <td>{{ teacher.user.username }}</td>
+                                <td>{{ teacher.subjects|default:"Not specified" }}</td>
+                                <td>
+                                    <div class="btn-group">
+                                        <a href="{% url 'change_teacher_password' teacher.id %}"
+                                           class="btn btn-warning">
+                                            <i class="fas fa-key"></i> Password
+                                        </a>
+                                        <a href="{% url 'remove_teacher' teacher.id %}" class="btn btn-danger"
+                                           onclick="return confirm('Are you sure you want to remove this teacher?')">
+                                            <i class="fas fa-trash"></i> Remove
+                                        </a>
+                                        <a href="{% url 'recent_work_sessions' teacher.id %}" class="btn btn-info">
+                                            <i class="fas fa-history"></i> Sessions
+                                        </a>
+                                        <a href="{% url 'record_work_with_teacher' teacher.id %}"
+                                           class="btn btn-primary">
+                                            <i class="fas fa-edit"></i> Record
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
                             </tbody>
                         </table>
                     </div>

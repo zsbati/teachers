@@ -155,14 +155,18 @@ def add_teacher(request):
 
 
 @login_required
-@user_passes_test(is_superuser)
+@user_passes_test(lambda u: u.is_superuser)
 def remove_teacher(request, teacher_id):
-    if request.method == 'POST':
-        teacher = get_object_or_404(Teacher, id=teacher_id)
-        user = teacher.user
-        teacher.delete()
-        user.delete()
-        messages.success(request, 'Teacher was successfully removed!')
+    try:
+        teacher = Teacher.objects.get(id=teacher_id)
+        # Delete the associated user first (this will cascade delete the teacher)
+        teacher.user.delete()
+        messages.success(request, f'Teacher {teacher.user.username} has been successfully removed.')
+    except Teacher.DoesNotExist:
+        messages.error(request, 'Teacher not found.')
+    except Exception as e:
+        messages.error(request, f'Error removing teacher: {str(e)}')
+
     return redirect('manage_teachers')
 
 
