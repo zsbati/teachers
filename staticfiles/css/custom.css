@@ -1,0 +1,39 @@
+body {
+    background-image: url('../images/background.jpg');
+    background-size: cover;
+    background-position: center;
+    background-attachment: fixed;
+    background-repeat: no-repeat;
+    min-height: 100vh;
+}
+
+/* Add a semi-transparent overlay to make text more readable */
+body::before {
+    content: "";
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(255, 255, 255, 0.8);
+    z-index: -1;
+}
+
+/* Logo styling */
+.logo {
+    max-height: 50px;
+    margin-right: 10px;
+}
+
+/* Card styling to ensure readability */
+.card {
+    background-color: rgba(255, 255, 255, 0.9);
+    border-radius: 10px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+/* Add some padding to the main content */
+.container {
+    padding-top: 20px;
+    padding-bottom: 20px;
+} 
