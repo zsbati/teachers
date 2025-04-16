@@ -4,6 +4,7 @@ from django.contrib.contenttypes.models import ContentType
 from django.utils import timezone
 from decimal import Decimal
 from django.db.models import Sum, F
+from datetime import datetime
 
 
 # Custom User Model
@@ -45,6 +46,10 @@ class WorkSession(models.Model):
     teacher = models.ForeignKey(Teacher, on_delete=models.CASCADE)
     task = models.ForeignKey(Task, on_delete=models.CASCADE)
     entry_type = models.CharField(max_length=10, choices=ENTRY_TYPE_CHOICES)
+    hourly_rate = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)  # Store the hourly rate at creation time
+    stored_hours = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)  # Store the hours at creation time
+    is_deleted = models.BooleanField(default=False)
+    deleted_at = models.DateTimeField(null=True, blank=True)
 
     # For manual entry
     manual_hours = models.DecimalField(max_digits=5, decimal_places=2, null=True, blank=True)
@@ -61,20 +66,75 @@ class WorkSession(models.Model):
     total_amount = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
 
     def save(self, *args, **kwargs):
-        # Calculate total amount based on entry type
-        if self.entry_type == 'manual' and self.manual_hours:
-            self.total_amount = self.task.hourly_rate * self.manual_hours
-        elif self.entry_type == 'clock' and self.clock_in and self.clock_out:
-            duration = self.clock_out - self.clock_in
-            hours = Decimal(str(duration.total_seconds() / 3600))  # Convert to Decimal
-            self.total_amount = self.task.hourly_rate * hours
-        elif self.entry_type == 'time_range' and self.start_time and self.end_time:
-            duration = self.end_time - self.start_time
-            hours = Decimal(str(duration.total_seconds() / 3600))  # Convert to Decimal
-            self.total_amount = self.task.hourly_rate * hours
+        # Store the hourly rate at creation time if it's a new record
+        if not self.pk:  # Only set on creation
+            self.hourly_rate = self.task.hourly_rate
+
+        # Store hours based on entry type
+        if self.entry_type == 'manual':
+            if self.manual_hours:
+                self.stored_hours = self.manual_hours
+            else:
+                raise ValueError("Manual entry type requires manual_hours")
+        elif self.entry_type == 'clock':
+            if self.clock_in and self.clock_out:
+                hours = (self.clock_out - self.clock_in).total_seconds() / 3600
+                self.stored_hours = Decimal(hours)
+            else:
+                raise ValueError("Clock entry type requires clock_in and clock_out")
+        elif self.entry_type == 'time_range':
+            if self.start_time and self.end_time:
+                duration = self.end_time - self.start_time
+                hours = Decimal(str(duration.total_seconds() / 3600))
+                self.stored_hours = hours
+            else:
+                raise ValueError("Time range entry type requires start_time and end_time")
+        
+        # Calculate total amount using stored values
+        if self.stored_hours and self.hourly_rate:
+            self.total_amount = self.stored_hours * self.hourly_rate
+        
         super().save(*args, **kwargs)
 
+    def clean(self):
+        """Validate the entry type requirements"""
+        if self.entry_type == 'manual' and not self.manual_hours:
+            raise ValidationError({
+                'manual_hours': 'Manual entry type requires manual_hours'
+            })
+        elif self.entry_type == 'clock':
+            if not self.clock_in or not self.clock_out:
+                raise ValidationError({
+                    'clock_in': 'Clock entry type requires both clock_in and clock_out',
+                    'clock_out': 'Clock entry type requires both clock_in and clock_out'
+                })
+            if self.clock_in >= self.clock_out:
+                raise ValidationError({
+                    'clock_out': 'Clock out must be after clock in'
+                })
+        elif self.entry_type == 'time_range':
+            if not self.start_time or not self.end_time:
+                raise ValidationError({
+                    'start_time': 'Time range entry type requires both start_time and end_time',
+                    'end_time': 'Time range entry type requires both start_time and end_time'
+                })
+            if self.start_time >= self.end_time:
+                raise ValidationError({
+                    'end_time': 'End time must be after start time'
+                })
+
     @property
+    def calculated_hours(self):
+        """Return stored hours"""
+        return self.stored_hours or Decimal(0)
+
+    @property
+    def calculated_amount(self):
+        """Calculate amount using stored values"""
+        if self.stored_hours and self.hourly_rate:
+            return self.stored_hours * self.hourly_rate
+        return None
+
     def calculated_hours(self):
         """
         Calculate the total hours worked based on the entry type.
@@ -191,9 +251,64 @@ class SalaryReport(models.Model):
     teacher = models.ForeignKey(Teacher, on_delete=models.CASCADE)
     start_date = models.DateTimeField()
     end_date = models.DateTimeField()
+    total_hours = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
+    total_amount = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     created_by = models.ForeignKey(CustomUser, on_delete=models.SET_NULL, null=True)
     notes = models.TextField(blank=True)
+    is_deleted = models.BooleanField(default=False)
+    deleted_at = models.DateTimeField(null=True, blank=True)
 
     def __str__(self):
         return f"Salary Report - {self.teacher} ({self.start_date.strftime('%B %Y')})"
+
+    @classmethod
+    def create_for_month(cls, teacher, year, month, created_by, notes=""):
+        """Create a salary report for a specific month with historical data"""
+        start_date = timezone.make_aware(datetime(year, month, 1))
+        end_date = timezone.make_aware(datetime(year, month + 1, 1)) if month < 12 else \
+                   timezone.make_aware(datetime(year + 1, 1, 1))
+
+        # Get all work sessions for this month
+        work_sessions = WorkSession.objects.filter(
+            teacher=teacher,
+            created_at__gte=start_date,
+            created_at__lt=end_date,
+            is_deleted=False
+        )
+
+        # Calculate total hours and amount using stored values
+        total_hours = Decimal(0)
+        total_amount = Decimal(0)
+        
+        for session in work_sessions:
+            if session.stored_hours and session.hourly_rate:
+                total_hours += session.stored_hours
+                total_amount += session.stored_hours * session.hourly_rate
+
+        # Create the report with historical data
+        report = cls.objects.create(
+            teacher=teacher,
+            start_date=start_date,
+            end_date=end_date,
+            total_hours=total_hours,
+            total_amount=total_amount,
+            created_by=created_by,
+            notes=notes
+        )
+        return report
+
+    def delete(self, *args, **kwargs):
+        """Soft delete the report"""
+        self.is_deleted = True
+        self.deleted_at = timezone.now()
+        self.save(update_fields=['is_deleted', 'deleted_at'])
+
+    def get_work_sessions(self):
+        """Get all work sessions for this report"""
+        return WorkSession.objects.filter(
+            teacher=self.teacher,
+            created_at__gte=self.start_date,
+            created_at__lt=self.end_date,
+            is_deleted=False
+        )
