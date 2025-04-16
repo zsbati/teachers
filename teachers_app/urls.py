@@ -31,4 +31,5 @@ urlpatterns = [
     path('superuser/salary-reports/create/', views.create_salary_report, name='create_salary_report'),
     path('superuser/salary-reports/<int:teacher_id>/<int:year>/<int:month>/', views.view_salary_report,
          name='view_salary_report'),
+    path('dashboard/teacher/salary-reports/', views.teacher_salary_reports, name='teacher_salary_reports'),
 ]

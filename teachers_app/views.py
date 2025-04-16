@@ -433,3 +433,25 @@ def list_salary_reports(request, teacher_id=None):
         'teacher': teacher,
         'reports': reports_with_data
     })
+
+
+@login_required
+@user_passes_test(lambda u: u.is_teacher)
+def teacher_salary_reports(request):
+    teacher = get_object_or_404(Teacher, user=request.user)
+    reports = SalaryReport.objects.filter(teacher=teacher).order_by('-start_date')
+
+    # For each report, calculate the salary (reuse logic)
+    reports_with_data = []
+    for report in reports:
+        year = report.start_date.year
+        month = report.start_date.month
+        report_data = SalaryCalculationService.calculate_salary(report.teacher, year, month)
+        reports_with_data.append({
+            'report': report,
+            'total_salary': report_data['total_salary']
+        })
+
+    return render(request, 'teachers/teacher_salary_reports.html', {
+        'reports': reports_with_data
+    })
