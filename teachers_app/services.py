@@ -50,6 +50,15 @@ class SalaryCalculationService:
 
                     session_details.append({
                         'date': session.created_at.date(),
+                        'time': (
+                            f"{session.clock_in.strftime('%H:%M')} - {session.clock_out.strftime('%H:%M')}"
+                            if session.entry_type == 'clock' and session.clock_in and session.clock_out
+                            else (
+                                f"{session.start_time.strftime('%H:%M')} - {session.end_time.strftime('%H:%M')}"
+                                if session.entry_type == 'time_range' and session.start_time and session.end_time
+                                else ''
+                            )
+                        ),
                         'task_name': task.name,
                         'hours': float(hours_decimal),
                         'rate': task.hourly_rate,

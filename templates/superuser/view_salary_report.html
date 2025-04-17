@@ -45,6 +45,7 @@
                         <thead>
                             <tr>
                                 <th>Date</th>
+                                <th>Time</th>
                                 <th>Task</th>
                                 <th>Hours</th>
                                 <th>Rate</th>
@@ -57,6 +58,7 @@
                             {% for session in report_data.session_details %}
                             <tr>
                                 <td>{{ session.date }}</td>
+                                <td>{{ session.time }}</td>
                                 <td>{{ session.task_name }}</td>
                                 <td>{{ session.hours|floatformat:2 }}</td>
                                 <td>${{ session.rate|floatformat:2 }}/hr</td>
