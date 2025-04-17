@@ -3,6 +3,9 @@ from django.contrib.auth import views as auth_views
 from . import views
 
 urlpatterns = [
+    path('dashboard/superuser/work-sessions/', views.list_work_sessions, name='superuser_list_work_sessions'),
+    path('dashboard/superuser/work-sessions/<int:session_id>/edit/', views.edit_work_session, name='edit_work_session'),
+    path('dashboard/superuser/work-sessions/<int:session_id>/delete/', views.delete_work_session, name='delete_work_session'),
     path('dashboard/superuser/edit-student/<int:student_id>/', views.edit_student, name='edit_student'),
     path('', views.dashboard_redirect, name='dashboard'),  # Root path now uses dynamic redirect
     path('dashboard/teachers/', views.teachers_dashboard, name='teachers_dashboard'),
@@ -34,5 +37,6 @@ urlpatterns = [
     path('superuser/salary-reports/create/', views.create_salary_report, name='create_salary_report'),
     path('superuser/salary-reports/<int:teacher_id>/<int:year>/<int:month>/', views.view_salary_report,
          name='view_salary_report'),
+    path('superuser/salary-reports/<int:report_id>/delete/', views.delete_salary_report, name='delete_salary_report'),
     path('dashboard/teacher/salary-reports/', views.teacher_salary_reports, name='teacher_salary_reports'),
 ]

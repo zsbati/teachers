@@ -16,6 +16,9 @@
             <th>Total Time (Hours)</th>
             <th>Task</th>
             <th>Total Amount</th>
+            {% if request.user.is_superuser %}
+            <th>Actions</th>
+            {% endif %}
         </tr>
         </thead>
         <tbody>
@@ -53,6 +56,17 @@
 
             <!-- Total Amount -->
             <td>${{ session.total_amount }}</td>
+
+            <!-- Actions for superusers -->
+            {% if request.user.is_superuser %}
+            <td>
+                <a href="{% url 'edit_work_session' session.id %}" class="btn btn-sm btn-primary">Edit</a>
+                <form method="post" action="{% url 'delete_work_session' session.id %}" style="display: inline;" onsubmit="return confirm('Are you sure you want to delete this work session?');">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-sm btn-danger">Delete</button>
+                </form>
+            </td>
+            {% endif %}
         </tr>
         {% endfor %}
         </tbody>

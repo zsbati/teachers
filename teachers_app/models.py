@@ -25,12 +25,15 @@ class Teacher(models.Model):
 
 # Task Model (different types of work with their rates)
 class Task(models.Model):
-    name = models.CharField(max_length=100)
+    name = models.CharField(max_length=200)
+    description = models.TextField(blank=True, null=True)
+    duration = models.DurationField(null=True, blank=True)
+    price = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
     hourly_rate = models.DecimalField(max_digits=10, decimal_places=2)
-    description = models.TextField(blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
-
+    is_active = models.BooleanField(default=True)
+    
     def __str__(self):
         return f"{self.name} (${self.hourly_rate}/hour)"
 

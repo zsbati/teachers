@@ -162,6 +162,57 @@ def remove_student(request, student_id):
 
 @login_required
 @user_passes_test(lambda u: u.is_superuser)
+def list_work_sessions(request):
+    work_sessions = WorkSession.objects.select_related('task', 'teacher').order_by('-start_time')
+    context = {
+        'work_sessions': work_sessions
+    }
+    return render(request, 'superuser/list_work_sessions.html', context)
+
+@login_required
+@user_passes_test(lambda u: u.is_superuser)
+def edit_work_session(request, session_id):
+    session = get_object_or_404(WorkSession, id=session_id)
+    
+    # Determine which form to use based on the existing session type
+    if session.entry_type == 'manual':
+        FormClass = WorkSessionManualForm
+    elif session.entry_type == 'clock':
+        FormClass = WorkSessionClockForm
+    else:  # time_range
+        FormClass = WorkSessionTimeRangeForm
+    
+    if request.method == "POST":
+        form = FormClass(request.POST, instance=session)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Work session updated successfully.')
+            return redirect('superuser_list_work_sessions')
+    else:
+        form = FormClass(instance=session)
+    
+    context = {
+        'form': form,
+        'session': session
+    }
+    return render(request, 'superuser/edit_work_session.html', context)
+
+@login_required
+@user_passes_test(lambda u: u.is_superuser)
+def delete_work_session(request, session_id):
+    session = get_object_or_404(WorkSession, id=session_id)
+    if request.method == "POST":
+        session.delete()
+        messages.success(request, 'Work session deleted successfully.')
+        return redirect('superuser_list_work_sessions')
+    
+    context = {
+        'session': session
+    }
+    return render(request, 'superuser/confirm_work_session_deletion.html', context)
+
+@login_required
+@user_passes_test(lambda u: u.is_superuser)
 def manage_tasks(request):
     if request.method == "POST":
         form = TaskForm(request.POST)
@@ -491,6 +542,16 @@ def list_salary_reports(request, teacher_id=None):
         'teacher': teacher,
         'reports': reports_with_data
     })
+
+
+@login_required
+@user_passes_test(lambda u: u.is_superuser)
+def delete_salary_report(request, report_id):
+    """Soft-delete a salary report and redirect back to the list."""
+    report = get_object_or_404(SalaryReport, id=report_id)
+    report.delete()
+    messages.success(request, 'Salary report deleted successfully.')
+    return redirect('list_salary_reports')
 
 
 @login_required

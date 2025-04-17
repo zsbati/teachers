@@ -57,11 +57,12 @@ class TeacherCreationForm(forms.Form):
 class TaskForm(forms.ModelForm):
     class Meta:
         model = Task
-        fields = ['name', 'hourly_rate', 'description']
+        fields = ['name', 'description', 'hourly_rate', 'price']
         widgets = {
             'name': forms.TextInput(attrs={'class': 'form-control'}),
-            'hourly_rate': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01'}),
             'description': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
+            'hourly_rate': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01'}),
+            'price': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01'}),
         }
 
 
