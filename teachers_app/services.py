@@ -46,7 +46,7 @@ class SalaryCalculationService:
                         continue  # Skip this session if conversion fails
 
                     total_hours += hours_decimal
-                    session_total = hours_decimal * task.hourly_rate
+                    session_total = hours_decimal * (session.hourly_rate if session.hourly_rate is not None else task.hourly_rate)
 
                     session_details.append({
                         'date': session.created_at.date(),
@@ -61,7 +61,7 @@ class SalaryCalculationService:
                         ),
                         'task_name': task.name,
                         'hours': float(hours_decimal),
-                        'rate': task.hourly_rate,
+                        'rate': session.hourly_rate if session.hourly_rate is not None else task.hourly_rate,
                         'total': session_total,
                         'entry_type': session.entry_type,
                         'notes': f"{session}"

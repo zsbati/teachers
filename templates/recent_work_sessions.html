@@ -11,10 +11,12 @@
     <table class="table table-striped">
         <thead>
         <tr>
+            <th>Date</th>
             <th>Start Time</th>
             <th>End Time</th>
             <th>Total Time (Hours)</th>
             <th>Task</th>
+            <th>Hourly Rate</th>
             <th>Total Amount</th>
             {% if request.user.is_superuser %}
             <th>Actions</th>
@@ -24,6 +26,7 @@
         <tbody>
         {% for session in work_sessions %}
         <tr>
+            <td>{{ session.created_at|date:"Y-m-d" }}</td>
             <!-- Start Time -->
             <td>
                 {% if session.start_time %}
@@ -53,6 +56,9 @@
 
             <!-- Task -->
             <td>{{ session.task.name }}</td>
+
+            <!-- Hourly Rate -->
+            <td>${{ session.hourly_rate|floatformat:2 }}/hr</td>
 
             <!-- Total Amount -->
             <td>${{ session.total_amount }}</td>
