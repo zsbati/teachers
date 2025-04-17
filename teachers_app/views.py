@@ -1,15 +1,18 @@
 from django.contrib.auth.decorators import login_required, user_passes_test
-from django.contrib.auth import update_session_auth_hash
-from django.contrib import messages
+from django import forms
 from django.shortcuts import render, redirect, get_object_or_404
 from django.utils import timezone
-from django.http import HttpResponseForbidden
+from django.contrib import messages
+from django.contrib.auth.decorators import login_required, user_passes_test
+from django.db.models import Sum
+from django.db.models.functions import Coalesce
+
 from .forms import (
     CustomPasswordChangeForm, TeacherCreationForm, TaskForm,
     WorkSessionManualForm, WorkSessionClockForm, WorkSessionTimeRangeForm, WorkSessionFilterForm, AddTeacherForm,
-    ChangeTeacherPasswordForm, SalaryReportForm
+    ChangeTeacherPasswordForm, SalaryReportForm, StudentForm, EditStudentForm
 )
-from .models import Teacher, CustomUser, Task, WorkSession, SalaryReport
+from .models import Teacher, CustomUser, Task, WorkSession, SalaryReport, Student
 from .services import SalaryCalculationService
 
 
@@ -100,6 +103,61 @@ def manage_teachers(request):
         'teachers': teachers,
     }
     return render(request, 'superuser/manage_teachers.html', context)
+
+
+@login_required
+@user_passes_test(lambda u: u.is_superuser)
+def manage_students(request):
+    if request.method == "POST":
+        form = StudentForm(request.POST)
+        if form.is_valid():
+            student = form.save()
+            messages.success(request, f'Student {student.username} created successfully.')
+            return redirect('manage_students')
+    else:
+        form = StudentForm()
+    
+    students = Student.objects.all()
+    context = {
+        'form': form,
+        'students': students,
+    }
+    return render(request, 'superuser/manage_students.html', context)
+
+
+@login_required
+@user_passes_test(lambda u: u.is_superuser)
+def edit_student(request, student_id):
+    student = get_object_or_404(Student, id=student_id)
+    if request.method == "POST":
+        form = EditStudentForm(request.POST, instance=student)
+        if form.is_valid():
+            form.save()
+            messages.success(request, f'Student {student.username} updated successfully.')
+            return redirect('manage_students')
+    else:
+        form = EditStudentForm(instance=student)
+    
+    context = {
+        'form': form,
+        'student': student,
+    }
+    return render(request, 'superuser/edit_student.html', context)
+
+
+@login_required
+@user_passes_test(lambda u: u.is_superuser)
+def remove_student(request, student_id):
+    student = get_object_or_404(Student, id=student_id)
+    if request.method == "POST":
+        student.delete()
+        messages.success(request, f'Student {student.username} removed successfully.')
+        return redirect('manage_students')
+    
+    context = {
+        'student': student,
+    }
+    return render(request, 'superuser/confirm_student_removal.html', context)
 
 
 @login_required

@@ -3,6 +3,7 @@ from django.contrib.auth import views as auth_views
 from . import views
 
 urlpatterns = [
+    path('dashboard/superuser/edit-student/<int:student_id>/', views.edit_student, name='edit_student'),
     path('', views.dashboard_redirect, name='dashboard'),  # Root path now uses dynamic redirect
     path('dashboard/teachers/', views.teachers_dashboard, name='teachers_dashboard'),
     path('dashboard/superuser/', views.superuser_dashboard, name='superuser_dashboard'),
@@ -20,6 +21,8 @@ urlpatterns = [
     path('superuser/manage-tasks/', views.manage_tasks, name='manage_tasks'),
     path('edit-task/<int:task_id>/', views.edit_task, name='edit_task'),
     path('remove-task/<int:task_id>/', views.remove_task, name='remove_task'),
+    path('superuser/manage-students/', views.manage_students, name='manage_students'),
+    path('remove-student/<int:student_id>/', views.remove_student, name='remove_student'),
     path('record-work/', views.record_work, name='record_work'),  # For teachers recording their own work
     path('record-work/<int:teacher_id>/', views.record_work, name='record_work_with_teacher'),
     path('clock-out/<int:session_id>/', views.clock_out, name='clock_out'),

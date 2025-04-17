@@ -1,6 +1,6 @@
 from django import forms
-from django.contrib.auth.forms import PasswordChangeForm
-from .models import Teacher, CustomUser, Task, WorkSession, SalaryReport
+from django.contrib.auth.forms import PasswordChangeForm, UserCreationForm
+from .models import Teacher, CustomUser, Task, WorkSession, SalaryReport, Student
 
 
 class CustomPasswordChangeForm(PasswordChangeForm):
@@ -167,6 +167,56 @@ class ChangeTeacherPasswordForm(forms.Form):
             raise forms.ValidationError("Passwords do not match")
 
         return cleaned_data
+
+
+class StudentForm(UserCreationForm):
+    phone = forms.CharField(
+        max_length=20,
+        required=False,
+        widget=forms.TextInput(attrs={'class': 'form-control'})
+    )
+    is_active = forms.BooleanField(
+        required=False,
+        widget=forms.CheckboxInput(attrs={'class': 'form-check-input'})
+    )
+
+    class Meta:
+        model = Student
+        fields = ['username', 'email', 'phone', 'password1', 'is_active']
+        widgets = {
+            'username': forms.TextInput(attrs={'class': 'form-control'}),
+            'email': forms.EmailInput(attrs={'class': 'form-control'}),
+            'phone': forms.TextInput(attrs={'class': 'form-control'}),
+            'password1': forms.PasswordInput(attrs={'class': 'form-control'}),
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Remove the password confirmation field
+        self.fields.pop('password2')
+
+    def clean(self):
+        cleaned_data = super().clean()
+        return cleaned_data
+
+class EditStudentForm(forms.ModelForm):
+    phone = forms.CharField(
+        max_length=20,
+        required=False,
+        widget=forms.TextInput(attrs={'class': 'form-control'})
+    )
+    is_active = forms.BooleanField(
+        required=False,
+        widget=forms.CheckboxInput(attrs={'class': 'form-check-input'})
+    )
+
+    class Meta:
+        model = Student
+        fields = ['username', 'email', 'phone', 'is_active']
+        widgets = {
+            'username': forms.TextInput(attrs={'class': 'form-control'}),
+            'email': forms.EmailInput(attrs={'class': 'form-control'}),
+        }
 
 
 class SalaryReportForm(forms.Form):

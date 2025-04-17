@@ -1,0 +1,11 @@
+{% extends 'base.html' %}
+{% block title %}No Salary Report{% endblock %}
+{% block content %}
+<div class="container mt-4">
+    <div class="alert alert-warning">
+        <h4>No Salary Report</h4>
+        <p>No salary report was found for {{ month }}/{{ year }}.</p>
+        <a href="{% url 'teacher_salary_reports' %}" class="btn btn-primary mt-2">Back to My Salary Reports</a>
+    </div>
+</div>
+{% endblock %}

@@ -29,8 +29,9 @@ class InspectorAdmin(admin.ModelAdmin):
 
 @admin.register(Student)
 class StudentAdmin(admin.ModelAdmin):
-    list_display = ('name', 'email')
-    search_fields = ('name', 'email')
+    list_display = ('username', 'email', 'phone', 'is_active')
+    search_fields = ('username', 'email', 'phone')
+    list_filter = ('is_active',)
 
 @admin.register(WorkSession)
 class WorkSessionAdmin(admin.ModelAdmin):

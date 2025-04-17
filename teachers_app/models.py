@@ -161,12 +161,48 @@ class WorkSession(models.Model):
 
 
 # Student Model
-class Student(models.Model):
-    name = models.CharField(max_length=100)
-    email = models.EmailField(unique=True)
+class Student(AbstractUser):
+    phone = models.CharField(max_length=20, blank=True, null=True)
+    is_active = models.BooleanField(default=True)
+
+    class Meta:
+        verbose_name = 'student'
+        verbose_name_plural = 'students'
+
+    # Override the related_name for groups and permissions to avoid conflicts
+    groups = models.ManyToManyField(
+        'auth.Group',
+        related_name='student_set',
+        blank=True,
+        help_text='The groups this student belongs to. A student will get all permissions granted to each of their groups.',
+        verbose_name='groups',
+    )
+    user_permissions = models.ManyToManyField(
+        'auth.Permission',
+        related_name='student_set',
+        blank=True,
+        help_text='Specific permissions for this student.',
+        verbose_name='user permissions',
+    )
 
     def __str__(self):
-        return self.name
+        return self.username
+
+    def get_total_hours(self, start_date=None, end_date=None):
+        """Get total hours worked for this student within a date range"""
+        sessions = WorkSession.objects.filter(
+            student=self,
+            created_at__range=(start_date, end_date) if start_date and end_date else None
+        )
+        return sessions.aggregate(total_hours=Sum('stored_hours'))['total_hours'] or Decimal('0.00')
+
+    def get_total_amount(self, start_date=None, end_date=None):
+        """Get total amount billed for this student within a date range"""
+        sessions = WorkSession.objects.filter(
+            student=self,
+            created_at__range=(start_date, end_date) if start_date and end_date else None
+        )
+        return sessions.aggregate(total_amount=Sum('total_amount'))['total_amount'] or Decimal('0.00')
 
 
 # Inspector Model (Base class with view-only privileges)
