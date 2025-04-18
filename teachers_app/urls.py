@@ -9,6 +9,7 @@ urlpatterns = [
     path('dashboard/superuser/edit-student/<int:student_id>/', views.edit_student, name='edit_student'),
     path('', views.dashboard_redirect, name='dashboard'),  # Root path now uses dynamic redirect
     path('dashboard/teachers/', views.teachers_dashboard, name='teachers_dashboard'),
+    path('dashboard/student/', views.student_dashboard, name='student_dashboard'),
     path('dashboard/superuser/', views.superuser_dashboard, name='superuser_dashboard'),
     path('change-password/', views.change_password, name='change_password'),
     path('login/', auth_views.LoginView.as_view(template_name='login.html'), name='login'),

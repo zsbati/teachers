@@ -41,8 +41,12 @@ def dashboard_redirect(request):
     """
     if request.user.is_superuser:
         return redirect('superuser_dashboard')
-    else:
+    elif hasattr(request.user, 'is_student') and request.user.is_student:
+        return redirect('student_dashboard')
+    elif request.user.is_teacher:
         return redirect('teachers_dashboard')
+    else:
+        return redirect('dashboard_login')
 
 
 @login_required
@@ -51,6 +55,14 @@ def teachers_dashboard(request):
     View for the teacher's dashboard.
     """
     return render(request, 'teachers/dashboard.html')
+
+
+@login_required
+def student_dashboard(request):
+    """
+    View for the student's dashboard.
+    """
+    return render(request, 'student/dashboard.html')
 
 
 @login_required
