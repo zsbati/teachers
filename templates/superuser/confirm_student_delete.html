@@ -7,18 +7,18 @@
         <div class="col-md-6 offset-md-3">
             <div class="card">
                 <div class="card-header">
-                    <h5 class="mb-0">Confirm Student Deactivation</h5>
+                    <h5 class="mb-0">Confirm Student Deletion</h5>
                 </div>
                 <div class="card-body">
-                    <p>Are you sure you want to deactivate the student: <strong>{{ student.username }}</strong>?</p>
-                    <p class="text-muted">This action can be undone by reactivating the student later.</p>
+                    <p>Are you sure you want to permanently delete the student: <strong>{{ student.user.username }}</strong>?</p>
+                    <p class="text-muted">This action is permanent and cannot be undone. After deletion, you will be able to create a new student with the same username.</p>
                     
                     <div class="mt-3">
                         <form method="post" class="d-inline">
                             {% csrf_token %}
-                            <button type="submit" class="btn btn-danger">Yes, Deactivate Student</button>
+                            <button type="submit" class="btn btn-danger">Yes, Delete Student</button>
                         </form>
-                        <a href="{% url 'manage_students' %}" class="btn btn-secondary">Cancel</a>
+                        <a href="{% url 'view_deactivated_students' %}" class="btn btn-secondary">Cancel</a>
                     </div>
                 </div>
             </div>

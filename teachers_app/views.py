@@ -10,9 +10,19 @@ from django.db.models.functions import Coalesce
 from .forms import (
     CustomPasswordChangeForm, TeacherCreationForm, TaskForm,
     WorkSessionManualForm, WorkSessionClockForm, WorkSessionTimeRangeForm, WorkSessionFilterForm, AddTeacherForm,
-    ChangeTeacherPasswordForm, SalaryReportForm, StudentForm, EditStudentForm
+    ChangeTeacherPasswordForm, SalaryReportForm, StudentCreationForm, EditStudentForm, ChangeStudentPasswordForm
 )
 from .models import Teacher, CustomUser, Task, WorkSession, SalaryReport, Student
+
+@login_required
+@user_passes_test(lambda u: u.is_superuser)
+def view_deactivated_students(request):
+    deactivated_students = Student.objects.filter(is_active=False)
+    context = {
+        'deactivated_students': deactivated_students
+    }
+    return render(request, 'superuser/view_deactivated_students.html', context)
+
 from .services import SalaryCalculationService
 
 
@@ -108,19 +118,18 @@ def manage_teachers(request):
 @login_required
 @user_passes_test(lambda u: u.is_superuser)
 def manage_students(request):
-    if request.method == "POST":
-        form = StudentForm(request.POST)
-        if form.is_valid():
-            student = form.save()
-            messages.success(request, f'Student {student.username} created successfully.')
-            return redirect('manage_students')
-    else:
-        form = StudentForm()
+    active_students = Student.objects.filter(is_active=True)
+    deactivated_students = Student.objects.filter(is_active=False)
+    form = StudentCreationForm(request.POST or None)
+    if form.is_valid():
+        user = form.save()
+        messages.success(request, f'Student {user.username} created successfully.')
+        return redirect('manage_students')
     
-    students = Student.objects.all()
     context = {
         'form': form,
-        'students': students,
+        'active_students': active_students,
+        'deactivated_students': deactivated_students
     }
     return render(request, 'superuser/manage_students.html', context)
 
@@ -132,11 +141,19 @@ def edit_student(request, student_id):
     if request.method == "POST":
         form = EditStudentForm(request.POST, instance=student)
         if form.is_valid():
-            form.save()
-            messages.success(request, f'Student {student.username} updated successfully.')
+            # Save the student profile
+            student = form.save(commit=True)
+            messages.success(request, f'Student {student.user.username} updated successfully.')
+            messages.success(request, f'Student {student.user.username} updated successfully.')
             return redirect('manage_students')
     else:
-        form = EditStudentForm(instance=student)
+        # Initialize form with current values
+        initial_data = {
+            'phone': student.phone,
+            'is_active': student.is_active,
+            'email': student.user.email
+        }
+        form = EditStudentForm(initial=initial_data)
     
     context = {
         'form': form,
@@ -149,16 +166,57 @@ def edit_student(request, student_id):
 @user_passes_test(lambda u: u.is_superuser)
 def remove_student(request, student_id):
     student = get_object_or_404(Student, id=student_id)
-    if request.method == "POST":
-        student.delete()
-        messages.success(request, f'Student {student.username} removed successfully.')
+    if request.method == 'POST':
+        # Deactivate the student profile instead of deleting
+        student.is_active = False
+        student.save()
+        messages.success(request, f'Student {student.user.username} deactivated successfully.')
         return redirect('manage_students')
+    # GET: render confirmation page
+    return render(request, 'superuser/confirm_student_removal.html', {'student': student})
+
+@login_required
+@user_passes_test(lambda u: u.is_superuser)
+def reactivate_student(request, student_id):
+    student = get_object_or_404(Student, id=student_id)
+    if request.method == 'POST':
+        student.is_active = True
+        student.save()
+        messages.success(request, f'Student {student.user.username} reactivated successfully.')
+        return redirect('manage_students')
+    # GET: render confirmation page
+    return render(request, 'superuser/confirm_student_reactivation.html', {'student': student})
+
+@login_required
+@user_passes_test(lambda u: u.is_superuser)
+def delete_student(request, student_id):
+    student = get_object_or_404(Student, id=student_id)
+    if request.method == 'POST':
+        username = student.user.username
+        student.user.delete()  # This will cascade delete the Student profile as well
+        messages.success(request, f'Student {username} permanently deleted.')
+        return redirect('view_deactivated_students')
+    # GET: render confirmation page
+    return render(request, 'superuser/confirm_student_delete.html', {'student': student})
+
+@login_required
+@user_passes_test(lambda u: u.is_superuser)
+def change_student_password(request, student_id):
+    student = get_object_or_404(Student, id=student_id)
+    if request.method == 'POST':
+        form = ChangeStudentPasswordForm(request.POST)
+        if form.is_valid():
+            form.save(student.user)
+            messages.success(request, f'Password for {student.user.username} has been changed successfully.')
+            return redirect('manage_students')
+    else:
+        form = ChangeStudentPasswordForm()
     
     context = {
+        'form': form,
         'student': student,
     }
-    return render(request, 'superuser/confirm_student_removal.html', context)
-
+    return render(request, 'superuser/change_student_password.html', context)
 
 @login_required
 @user_passes_test(lambda u: u.is_superuser)

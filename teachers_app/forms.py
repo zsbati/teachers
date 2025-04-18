@@ -169,8 +169,19 @@ class ChangeTeacherPasswordForm(forms.Form):
 
         return cleaned_data
 
+class ChangeStudentPasswordForm(forms.Form):
+    new_password = forms.CharField(
+        required=True,
+        label="New Password",
+        widget=forms.PasswordInput(attrs={"class": "form-control"})
+    )
 
-class StudentForm(UserCreationForm):
+    def save(self, user):
+        user.set_password(self.cleaned_data['new_password'])
+        user.save()
+
+
+class StudentCreationForm(UserCreationForm):
     phone = forms.CharField(
         max_length=20,
         required=False,
@@ -182,8 +193,8 @@ class StudentForm(UserCreationForm):
     )
 
     class Meta:
-        model = Student
-        fields = ['username', 'email', 'phone', 'password1', 'is_active']
+        model = CustomUser
+        fields = ['username', 'email', 'password1', 'password2', 'is_active']
         widgets = {
             'username': forms.TextInput(attrs={'class': 'form-control'}),
             'email': forms.EmailInput(attrs={'class': 'form-control'}),
@@ -201,6 +212,35 @@ class StudentForm(UserCreationForm):
         return cleaned_data
 
 class EditStudentForm(forms.ModelForm):
+    email = forms.EmailField(
+        required=False,
+        widget=forms.EmailInput(attrs={'class': 'form-control'})
+    )
+
+    class Meta:
+        model = Student
+        fields = ['phone', 'is_active']
+        widgets = {
+            'phone': forms.TextInput(attrs={'class': 'form-control'}),
+            'is_active': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        if self.instance and self.instance.user:
+            self.initial['email'] = self.instance.user.email
+
+    def save(self, commit=True):
+        student = super().save(commit=False)
+        if self.instance and self.instance.user:
+            self.instance.user.email = self.cleaned_data.get('email', self.instance.user.email)
+            self.instance.user.save()
+        if commit:
+            student.save()
+        return student
+
+
+class EditStudentForm(forms.ModelForm):
     phone = forms.CharField(
         max_length=20,
         required=False,
@@ -213,10 +253,10 @@ class EditStudentForm(forms.ModelForm):
 
     class Meta:
         model = Student
-        fields = ['username', 'email', 'phone', 'is_active']
+        fields = ['phone', 'is_active']
         widgets = {
-            'username': forms.TextInput(attrs={'class': 'form-control'}),
-            'email': forms.EmailInput(attrs={'class': 'form-control'}),
+            'phone': forms.TextInput(attrs={'class': 'form-control'}),
+            'is_active': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
         }
 
 

@@ -7,7 +7,7 @@
         <div class="col-md-8 offset-md-2">
             <div class="card">
                 <div class="card-header">
-                    <h5 class="mb-0">Edit Student: {{ student.username }}</h5>
+                    <h5 class="mb-0">Edit Student: {{ student.user.username }}</h5>
                 </div>
                 <div class="card-body">
                     {% if messages %}
@@ -21,6 +21,7 @@
                     <form method="post">
                         {% csrf_token %}
                         {% for field in form %}
+                            {% if field.name != 'email' %}
                             <div class="form-group mb-2">
                                 <label for="{{ field.id_for_label }}" class="form-label small">{{ field.label }}</label>
                                 {{ field }}
@@ -35,7 +36,14 @@
                                     {% endfor %}
                                 {% endif %}
                             </div>
+                            {% endif %}
                         {% endfor %}
+                        <!-- Add email field explicitly -->
+                        <div class="form-group mb-2">
+                            <label for="id_email" class="form-label small">Email</label>
+                            <input type="email" name="email" id="id_email" class="form-control" 
+                                   value="{{ form.email.value|default:student.user.email }}">
+                        </div>
                         <div class="d-flex justify-content-between">
                             <a href="{% url 'manage_students' %}" class="btn btn-secondary">Cancel</a>
                             <button type="submit" class="btn btn-primary">Save Changes</button>
