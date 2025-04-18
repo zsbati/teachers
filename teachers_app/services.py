@@ -1,7 +1,6 @@
-from decimal import Decimal
-from django.utils import timezone
+from decimal import Decimal, ROUND_HALF_UP
+import django.utils.timezone as timezone
 from .models import Teacher, Task, WorkSession
-import math
 
 
 class SalaryCalculationService:
@@ -33,12 +32,13 @@ class SalaryCalculationService:
 
             for session in task_sessions:
                 hours = session.calculated_hours()
+                
                 print(f"Session ID: {getattr(session, 'id', 'N/A')}, entry_type: {getattr(session, 'entry_type', 'N/A')}, calculated_hours: {hours}")
                 if hours is not None:
                     try:
                         # Round hours to nearest hour for clock and time_range entries
                         if session.entry_type in ['clock', 'time_range']:
-                            hours_decimal = Decimal(str(math.ceil(hours)))
+                            hours_decimal = Decimal(str(hours)).quantize(Decimal('1'), rounding=ROUND_HALF_UP)
                         else:
                             hours_decimal = Decimal(str(hours))
                     except Exception as e:
@@ -67,12 +67,16 @@ class SalaryCalculationService:
                         'notes': f"{session}"
                     })
 
-            task_total = task.hourly_rate * total_hours
+            # Round total_hours to nearest hour for clock/time_range entries
+            rounded_hours = total_hours
+            if any(s.entry_type in ['clock', 'time_range'] for s in task_sessions):
+                rounded_hours = total_hours.quantize(Decimal('1'), rounding=ROUND_HALF_UP)
+            task_total = task.hourly_rate * rounded_hours
             total += task_total
 
             task_summaries.append({
                 'task_name': task.name,
-                'hours': float(total_hours),
+                'hours': float(rounded_hours),
                 'rate': task.hourly_rate,
                 'total': task_total
             })

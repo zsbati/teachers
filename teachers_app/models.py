@@ -2,7 +2,7 @@ from django.db import models
 from django.contrib.auth.models import AbstractUser, Permission
 from django.contrib.contenttypes.models import ContentType
 from django.utils import timezone
-from decimal import Decimal
+from decimal import Decimal, ROUND_HALF_UP
 from django.db.models import Sum, F
 from datetime import datetime
 
@@ -82,14 +82,16 @@ class WorkSession(models.Model):
         elif self.entry_type == 'clock':
             if self.clock_in and self.clock_out:
                 hours = (self.clock_out - self.clock_in).total_seconds() / 3600
-                self.stored_hours = Decimal(hours)
+                # Round clock-in/out hours to nearest hour
+                self.stored_hours = Decimal(str(hours)).quantize(Decimal('1'), rounding=ROUND_HALF_UP)
             else:
                 raise ValueError("Clock entry type requires clock_in and clock_out")
         elif self.entry_type == 'time_range':
             if self.start_time and self.end_time:
                 duration = self.end_time - self.start_time
                 hours = Decimal(str(duration.total_seconds() / 3600))
-                self.stored_hours = hours
+                # Round time-range hours to nearest hour
+                self.stored_hours = hours.quantize(Decimal('1'), rounding=ROUND_HALF_UP)
             else:
                 raise ValueError("Time range entry type requires start_time and end_time")
         
