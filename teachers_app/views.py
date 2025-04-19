@@ -6,6 +6,21 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.db.models import Sum
 from django.db.models.functions import Coalesce
+from django.core.exceptions import PermissionDenied
+from django.http import Http404
+
+def teacher_or_superuser(function=None, login_url=None, redirect_field_name=None):
+    """
+    Decorator that ensures the user is either a superuser or the teacher themselves.
+    """
+    actual_decorator = user_passes_test(
+        lambda u: u.is_superuser or (hasattr(u, 'teacher') and u.is_authenticated),
+        login_url=login_url,
+        redirect_field_name=redirect_field_name
+    )
+    if function:
+        return actual_decorator(function)
+    return actual_decorator
 
 from .forms import (
     CustomPasswordChangeForm, TeacherCreationForm, TaskForm,
@@ -154,8 +169,15 @@ def edit_student(request, student_id):
         form = EditStudentForm(request.POST, instance=student)
         if form.is_valid():
             # Save the student profile
-            student = form.save(commit=True)
-            messages.success(request, f'Student {student.user.username} updated successfully.')
+            student = form.save(commit=False)
+            # Update the user's email if it changed
+            try:
+                if 'email' in form.cleaned_data and form.cleaned_data['email'] != student.user.email:
+                    student.user.email = form.cleaned_data['email']
+                    student.user.save()
+            except CustomUser.DoesNotExist:
+                pass  # No user associated, skip email update
+            student.save()
             messages.success(request, f'Student {student.user.username} updated successfully.')
             return redirect('manage_students')
     else:
@@ -163,7 +185,78 @@ def edit_student(request, student_id):
         initial_data = {
             'phone': student.phone,
             'is_active': student.is_active,
-            'email': student.user.email
+            'email': getattr(student.user, 'email', '')
+        }
+        form = EditStudentForm(initial=initial_data)
+    
+    context = {
+        'form': form,
+        'student': student,
+    }
+    return render(request, 'superuser/edit_student.html', context)
+
+
+@login_required
+def edit_own_profile(request):
+    """Student view to edit their own profile."""
+    try:
+        student = request.user.student
+    except Student.DoesNotExist:
+        messages.error(request, 'You do not have a student profile.')
+        return redirect('student_dashboard')
+    
+    if request.method == "POST":
+        form = EditStudentForm(request.POST, instance=student)
+        if form.is_valid():
+            # Save the student profile
+            student = form.save(commit=False)
+            # Update the user's email if it changed
+            try:
+                if 'email' in form.cleaned_data and form.cleaned_data['email'] != student.user.email:
+                    student.user.email = form.cleaned_data['email']
+                    student.user.save()
+            except CustomUser.DoesNotExist:
+                pass  # No user associated, skip email update
+            student.save()
+            messages.success(request, 'Your profile has been updated successfully.')
+            return redirect('student_dashboard')
+    else:
+        # Initialize form with current values
+        initial_data = {
+            'phone': student.phone,
+            'is_active': student.is_active,
+            'email': getattr(student.user, 'email', '')
+        }
+        form = EditStudentForm(initial=initial_data)
+    
+    context = {
+        'form': form,
+        'student': student,
+        'is_own_profile': True
+    }
+    return render(request, 'student/edit_profile.html', context)
+    student = get_object_or_404(Student, id=student_id)
+    if request.method == "POST":
+        form = EditStudentForm(request.POST, instance=student)
+        if form.is_valid():
+            # Save the student profile
+            student = form.save(commit=False)
+            # Update the user's email if it changed
+            try:
+                if 'email' in form.cleaned_data and form.cleaned_data['email'] != student.user.email:
+                    student.user.email = form.cleaned_data['email']
+                    student.user.save()
+            except CustomUser.DoesNotExist:
+                pass  # No user associated, skip email update
+            student.save()
+            messages.success(request, f'Student {student.user.username} updated successfully.')
+            return redirect('manage_students')
+    else:
+        # Initialize form with current values
+        initial_data = {
+            'phone': student.phone,
+            'is_active': student.is_active,
+            'email': getattr(student.user, 'email', '')
         }
         form = EditStudentForm(initial=initial_data)
     
@@ -537,7 +630,18 @@ def create_salary_report(request):
                 end_date = timezone.datetime(year, month + 1, 1)
             end_date = end_date - timezone.timedelta(microseconds=1)
 
-            # Create the report
+            # Check if a report exists for this period
+            existing_reports = SalaryReport.objects.filter(
+                teacher=teacher,
+                start_date=start_date,
+                end_date=end_date
+            )
+            
+            if existing_reports.exists():
+                # Delete any existing reports for this period
+                existing_reports.delete()
+            
+            # Create a new report
             report = SalaryReport.objects.create(
                 teacher=teacher,
                 start_date=start_date,
@@ -546,10 +650,13 @@ def create_salary_report(request):
                 notes=notes
             )
 
-            # Calculate salary details - FIXED: Use static method
+            # Calculate salary details
             report_data = SalaryCalculationService.calculate_salary(teacher, year, month)
-
-            messages.success(request, f'Salary report created for {teacher.user.username} - {report_data["period"]}')
+            
+            # Since we're always creating a new report, we don't need to check if it was created
+            message = f'Salary report created for {teacher.user.username} - {report_data["period"]}'
+            messages.success(request, message)
+            
             return redirect('view_salary_report', teacher_id=teacher.id, year=year, month=month)
     else:
         form = SalaryReportForm()
@@ -560,10 +667,10 @@ def create_salary_report(request):
 
 
 @login_required
-@user_passes_test(lambda u: u.is_superuser)
+@teacher_or_superuser
 def view_salary_report(request, teacher_id, year, month):
     teacher = get_object_or_404(Teacher, id=teacher_id)
-
+    
     # Get the report for this month
     start_date = timezone.datetime(year, month, 1)
     if month == 12:
@@ -571,16 +678,39 @@ def view_salary_report(request, teacher_id, year, month):
     else:
         end_date = timezone.datetime(year, month + 1, 1)
     end_date = end_date - timezone.timedelta(microseconds=1)
-
-    report = get_object_or_404(SalaryReport,
-                               teacher=teacher,
-                               start_date=start_date,
-                               end_date=end_date)
+    
+    # Get the report for this period
+    reports = SalaryReport.objects.filter(
+        teacher=teacher,
+        start_date=start_date,
+        end_date=end_date,
+        is_deleted=False
+    ).order_by('-created_at')
+    
+    if not reports.exists():
+        # If no report exists, create a new one
+        report = SalaryReport.objects.create(
+            teacher=teacher,
+            start_date=start_date,
+            end_date=end_date,
+            created_by=request.user
+        )
+    else:
+        # If a report exists, use it
+        report = reports.first()
 
     # Calculate the report data - FIXED: Use static method
     report_data = SalaryCalculationService.calculate_salary(teacher, year, month)
 
-    return render(request, 'superuser/view_salary_report.html', {
+    # Check permissions
+    if request.user.is_superuser:
+        template = 'superuser/view_salary_report.html'
+    elif request.user == teacher.user:
+        template = 'teachers/view_salary_report.html'
+    else:
+        raise PermissionDenied("You do not have permission to view this report")
+
+    return render(request, template, {
         'teacher': teacher,
         'report': report,
         'report_data': report_data
@@ -592,10 +722,15 @@ def view_salary_report(request, teacher_id, year, month):
 def list_salary_reports(request, teacher_id=None):
     if teacher_id:
         teacher = get_object_or_404(Teacher, id=teacher_id)
-        reports = SalaryReport.objects.filter(teacher=teacher).order_by('-start_date')
+        reports = SalaryReport.objects.filter(
+            teacher=teacher,
+            is_deleted=False
+        ).order_by('-start_date')
     else:
         teacher = None
-        reports = SalaryReport.objects.all().order_by('-start_date')
+        reports = SalaryReport.objects.filter(
+            is_deleted=False
+        ).order_by('-start_date')
 
     # For each report, calculate the salary - FIXED: Use static method
     reports_with_data = []
@@ -617,7 +752,7 @@ def list_salary_reports(request, teacher_id=None):
 @login_required
 @user_passes_test(lambda u: u.is_superuser)
 def delete_salary_report(request, report_id):
-    """Soft-delete a salary report and redirect back to the list."""
+    """Delete a salary report and redirect back to the list."""
     report = get_object_or_404(SalaryReport, id=report_id)
     report.delete()
     messages.success(request, 'Salary report deleted successfully.')

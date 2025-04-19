@@ -216,31 +216,6 @@ class EditStudentForm(forms.ModelForm):
         required=False,
         widget=forms.EmailInput(attrs={'class': 'form-control'})
     )
-
-    class Meta:
-        model = Student
-        fields = ['phone', 'is_active']
-        widgets = {
-            'phone': forms.TextInput(attrs={'class': 'form-control'}),
-            'is_active': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
-        }
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        if self.instance and self.instance.user:
-            self.initial['email'] = self.instance.user.email
-
-    def save(self, commit=True):
-        student = super().save(commit=False)
-        if self.instance and self.instance.user:
-            self.instance.user.email = self.cleaned_data.get('email', self.instance.user.email)
-            self.instance.user.save()
-        if commit:
-            student.save()
-        return student
-
-
-class EditStudentForm(forms.ModelForm):
     phone = forms.CharField(
         max_length=20,
         required=False,
@@ -258,6 +233,31 @@ class EditStudentForm(forms.ModelForm):
             'phone': forms.TextInput(attrs={'class': 'form-control'}),
             'is_active': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
         }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        if self.instance:
+            # Initialize form fields with current values
+            self.initial['phone'] = self.instance.phone
+            self.initial['is_active'] = self.instance.is_active
+            # Try to get email from user if it exists
+            try:
+                self.initial['email'] = self.instance.user.email
+            except CustomUser.DoesNotExist:
+                self.initial['email'] = ''
+
+    def save(self, commit=True):
+        student = super().save(commit=False)
+        if self.instance and self.instance.user:
+            # Update user's email if it changed
+            current_email = self.instance.user.email
+            new_email = self.cleaned_data.get('email', current_email)
+            if new_email != current_email:
+                self.instance.user.email = new_email
+                self.instance.user.save()
+        if commit:
+            student.save()
+        return student
 
 
 class SalaryReportForm(forms.Form):

@@ -43,7 +43,7 @@
                                     <td>{{ item.report.created_by.username }}</td>
                                     <td>{{ item.report.created_at|date:"Y-m-d H:i" }}</td>
                                     <td>
-                                        <a href="{% url 'view_salary_report' item.report.teacher.id item.report.start_date|date:'Y' item.report.start_date|date:'n' %}" 
+                                        <a href="{% url 'teacher_view_salary_report' item.report.teacher.id item.report.start_date|date:'Y' item.report.start_date|date:'n' %}" 
                                            class="btn btn-sm btn-info">View</a>
                                     </td>
                                 </tr>
