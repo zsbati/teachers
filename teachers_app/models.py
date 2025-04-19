@@ -254,6 +254,22 @@ class SuperUser(Inspector):
         user.save()
 
 
+# Service Model
+class Service(models.Model):
+    name = models.CharField(max_length=200)
+    description = models.TextField(blank=True, null=True)
+    price = models.DecimalField(max_digits=10, decimal_places=2)
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"{self.name} (${self.price})"
+
+    class Meta:
+        verbose_name = 'Service'
+        verbose_name_plural = 'Services'
+
 # Salary Report Model
 class SalaryReport(models.Model):
     teacher = models.ForeignKey(Teacher, on_delete=models.CASCADE)

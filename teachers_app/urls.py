@@ -1,8 +1,13 @@
 from django.urls import path
 from django.contrib.auth import views as auth_views
 from . import views
+from .service_views import manage_services, add_service, edit_service, delete_service
 
 urlpatterns = [
+    path('superuser/manage-services/', manage_services, name='manage_services'),
+    path('superuser/add-service/', add_service, name='add_service'),
+    path('superuser/edit-service/<int:service_id>/', edit_service, name='edit_service'),
+    path('superuser/delete-service/<int:service_id>/', delete_service, name='delete_service'),
     path('dashboard/superuser/work-sessions/', views.list_work_sessions, name='superuser_list_work_sessions'),
     path('dashboard/superuser/work-sessions/<int:session_id>/edit/', views.edit_work_session, name='edit_work_session'),
     path('dashboard/superuser/work-sessions/<int:session_id>/delete/', views.delete_work_session, name='delete_work_session'),
