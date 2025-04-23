@@ -122,7 +122,7 @@ def student_bills(request, student_id):
     student = get_object_or_404(Student, pk=student_id)
     bills = Bill.objects.filter(student=student).order_by('-month')
     
-    return render(request, 'student/bills.html', {
+    return render(request, 'student/student_bills.html', {
         'student': student,
         'bills': bills
     })
