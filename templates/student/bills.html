@@ -1,0 +1,48 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container mt-4">
+    <h2>Student Bills</h2>
+    <div class="card">
+        <div class="card-body">
+            <h3>{{ student }}</h3>
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Month</th>
+                        <th>Total Amount</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for bill in bills %}
+                    <tr>
+                        <td>{{ bill.month|date:"F Y" }}</td>
+                        <td>${{ bill.total_amount }}</td>
+                        <td>
+                            {% if bill.is_paid %}
+                            <span class="badge bg-success">Paid</span>
+                            {% else %}
+                            <span class="badge bg-warning">Unpaid</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <a href="{% url 'bill_detail' bill_id=bill.id %}" class="btn btn-sm btn-info">View</a>
+                            {% if bill.is_paid %}
+                            <span class="text-muted">(Paid)</span>
+                            {% else %}
+                            <a href="{% url 'create_bill' student_id=student.id %}" class="btn btn-sm btn-primary">Update</a>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="4" class="text-center">No bills found</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

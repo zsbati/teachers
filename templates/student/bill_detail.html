@@ -1,0 +1,48 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container mt-4">
+    <h2>Bill Details</h2>
+    <div class="card">
+        <div class="card-body">
+            <h3>{{ bill.student }}</h3>
+            <p>Month: {{ bill.month|date:"F Y" }}</p>
+            <p>Total Amount: ${{ bill.total_amount }}</p>
+            <p>Status: 
+                {% if bill.is_paid %}
+                <span class="badge bg-success">Paid</span>
+                {% else %}
+                <span class="badge bg-warning">Unpaid</span>
+                {% endif %}
+            </p>
+            
+            <h4>Bill Items</h4>
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Service</th>
+                        <th>Price</th>
+                        <th>Quantity</th>
+                        <th>Amount</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in bill.items.all %}
+                    <tr>
+                        <td>{{ item.service_name }}</td>
+                        <td>${{ item.service_price_at_billing }}</td>
+                        <td>{{ item.quantity }}</td>
+                        <td>${{ item.amount }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+                <tfoot>
+                    <tr>
+                        <td colspan="3" class="text-end"><strong>Total:</strong></td>
+                        <td><strong>${{ total }}</strong></td>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,6 +1,7 @@
 from django import forms
 from django.contrib.auth.forms import PasswordChangeForm, UserCreationForm
-from .models import Teacher, CustomUser, Task, WorkSession, SalaryReport, Student
+from .models import Teacher, CustomUser, Task, WorkSession, SalaryReport, Student, Service
+from .billing_models import BillItem
 
 
 class CustomPasswordChangeForm(PasswordChangeForm):
@@ -283,3 +284,42 @@ class SalaryReportForm(forms.Form):
         label="Notes",
         widget=forms.Textarea(attrs={"class": "form-control", "rows": 3})
     )
+
+
+class BillItemForm(forms.ModelForm):
+    """Form for adding services to a bill"""
+    service = forms.ModelChoiceField(
+        queryset=Service.objects.filter(is_active=True),
+        empty_label="Select a service...",
+        widget=forms.Select(attrs={'class': 'form-select'}),
+        help_text="Select the service to add to the bill"
+    )
+    
+    class Meta:
+        model = BillItem
+        fields = ['service', 'quantity', 'service_description']
+        widgets = {
+            'quantity': forms.NumberInput(attrs={'class': 'form-control', 'min': '1'}),
+            'service_description': forms.Textarea(attrs={'class': 'form-control', 'rows': '3'}),
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Add help text
+        self.fields['quantity'].help_text = 'Number of times this service was provided'
+        self.fields['service_description'].help_text = 'Optional description for this service item'
+
+    def clean(self):
+        cleaned_data = super().clean()
+        service = cleaned_data.get('service')
+        quantity = cleaned_data.get('quantity')
+        
+        if service and quantity:
+            # Calculate amount based on service price and quantity
+            service_price = service.price
+            cleaned_data['amount'] = service_price * quantity
+            cleaned_data['service_name'] = service.name
+            cleaned_data['service_description'] = service.description if service.description else ''
+            cleaned_data['service_price_at_billing'] = service_price
+            
+        return cleaned_data

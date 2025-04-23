@@ -33,6 +33,9 @@
                                 <li class="list-group-item">
                                     <a href="{% url 'change_password' %}" class="text-decoration-none">Change Password</a>
                                 </li>
+                                <li class="list-group-item">
+                                    <a href="{% url 'student_bills' student_id=user.student.id %}" class="text-decoration-none">View Bills</a>
+                                </li>
                             </ul>
                         </div>
                     </div>

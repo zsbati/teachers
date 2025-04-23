@@ -3,11 +3,27 @@ from django import forms
 from django.shortcuts import render, redirect, get_object_or_404
 from django.utils import timezone
 from django.contrib import messages
-from django.contrib.auth.decorators import login_required, user_passes_test
 from django.db.models import Sum
 from django.db.models.functions import Coalesce
 from django.core.exceptions import PermissionDenied
 from django.http import Http404
+
+# Import models from models.py
+from .models import Task, WorkSession, Teacher, Student, CustomUser, SalaryReport
+
+# Import billing models from billing_models.py
+from .billing_models import Bill, BillItem
+
+# Import views from billing_views.py
+from .billing_views import create_bill, student_bills, bill_detail
+
+from .forms import (
+    CustomPasswordChangeForm, TeacherCreationForm, TaskForm,
+    WorkSessionManualForm, WorkSessionClockForm, WorkSessionTimeRangeForm, WorkSessionFilterForm, AddTeacherForm,
+    ChangeTeacherPasswordForm, SalaryReportForm, StudentCreationForm, EditStudentForm, ChangeStudentPasswordForm
+)
+from .services import SalaryCalculationService
+
 
 def teacher_or_superuser(function=None, login_url=None, redirect_field_name=None):
     """
@@ -21,25 +37,6 @@ def teacher_or_superuser(function=None, login_url=None, redirect_field_name=None
     if function:
         return actual_decorator(function)
     return actual_decorator
-
-from .forms import (
-    CustomPasswordChangeForm, TeacherCreationForm, TaskForm,
-    WorkSessionManualForm, WorkSessionClockForm, WorkSessionTimeRangeForm, WorkSessionFilterForm, AddTeacherForm,
-    ChangeTeacherPasswordForm, SalaryReportForm, StudentCreationForm, EditStudentForm, ChangeStudentPasswordForm
-)
-from .models import Teacher, CustomUser, Task, WorkSession, SalaryReport, Student
-
-@login_required
-@user_passes_test(lambda u: u.is_superuser)
-def view_deactivated_students(request):
-    deactivated_students = Student.objects.filter(is_active=False)
-    context = {
-        'deactivated_students': deactivated_students
-    }
-    return render(request, 'superuser/view_deactivated_students.html', context)
-
-from .services import SalaryCalculationService
-
 
 def is_superuser(user):
     return user.is_superuser
@@ -316,7 +313,7 @@ def change_student_password(request, student_id):
             return redirect('manage_students')
     else:
         form = ChangeStudentPasswordForm()
-    
+
     context = {
         'form': form,
         'student': student,
@@ -779,3 +776,14 @@ def teacher_salary_reports(request):
     return render(request, 'teachers/teacher_salary_reports.html', {
         'reports': reports_with_data
     })
+
+
+@login_required
+@user_passes_test(lambda u: u.is_superuser)
+def view_deactivated_students(request):
+    """View all deactivated students"""
+    deactivated_students = Student.objects.filter(user__is_active=False)
+    context = {
+        'deactivated_students': deactivated_students
+    }
+    return render(request, 'superuser/view_deactivated_students.html', context)

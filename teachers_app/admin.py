@@ -1,5 +1,6 @@
 from django.contrib import admin
 from .models import Teacher, Inspector, Student, Task, WorkSession, SuperUser, CustomUser
+from .billing_models import Bill, BillItem
 from decimal import Decimal
 
 @admin.register(Task)
@@ -52,3 +53,24 @@ class WorkSessionAdmin(admin.ModelAdmin):
 class SuperUserAdmin(admin.ModelAdmin):
     list_display = ('user', 'last_login')
     search_fields = ('user__username',)
+
+@admin.register(Bill)
+class BillAdmin(admin.ModelAdmin):
+    list_display = ('student', 'month', 'total_amount', 'is_paid', 'created_at')
+    list_filter = ('is_paid', 'month')
+    search_fields = ('student__user__username', 'student__user__email')
+    date_hierarchy = 'month'
+    
+    def get_queryset(self, request):
+        queryset = super().get_queryset(request)
+        return queryset.select_related('student__user')
+
+@admin.register(BillItem)
+class BillItemAdmin(admin.ModelAdmin):
+    list_display = ('bill', 'service_name', 'quantity', 'amount')
+    list_filter = ('bill__month',)
+    search_fields = ('service_name', 'bill__student__user__username')
+    
+    def get_queryset(self, request):
+        queryset = super().get_queryset(request)
+        return queryset.select_related('bill', 'bill__student__user')
