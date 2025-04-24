@@ -1,5 +1,6 @@
 {% extends 'base.html' %}
 {% load static %}
+{{ form.media }}
 
 
 {% block title %}Recent Work Sessions{% endblock %}
@@ -18,6 +19,7 @@
             <th>Task</th>
             <th>Hourly Rate</th>
             <th>Total Amount</th>
+            <th>Student</th>
             {% if request.user.is_superuser %}
             <th>Actions</th>
             {% endif %}
@@ -62,6 +64,9 @@
 
             <!-- Total Amount -->
             <td>${{ session.total_amount }}</td>
+
+            <!-- Student -->
+            <td>{% if session.student %}{{ session.student }}{% else %}<em>No student assigned</em>{% endif %}</td>
 
             <!-- Actions for superusers -->
             {% if request.user.is_superuser %}

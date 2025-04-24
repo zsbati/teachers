@@ -1,5 +1,6 @@
 from django import forms
 from django.contrib.auth.forms import PasswordChangeForm, UserCreationForm
+from dal import autocomplete
 from .models import Teacher, CustomUser, Task, WorkSession, SalaryReport, Student, Service
 from .billing_models import BillItem
 
@@ -70,35 +71,47 @@ class TaskForm(forms.ModelForm):
 class WorkSessionManualForm(forms.ModelForm):
     class Meta:
         model = WorkSession
-        fields = ['task', 'manual_hours']
+        fields = ['task', 'manual_hours', 'student']
         widgets = {
             'task': forms.Select(attrs={'class': 'form-control'}),
             'manual_hours': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.5'}),
+            'student': forms.Select(attrs={'class': 'form-control'}),
         }
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.fields['manual_hours'].label = 'Hours Worked'
-
+        self.fields['student'].queryset = Student.objects.all()  # <--- THIS LINE
+        print("Student widget in WorkSessionManualForm:", type(self.fields['student'].widget))
 
 class WorkSessionClockForm(forms.ModelForm):
     class Meta:
         model = WorkSession
-        fields = ['task']
+        fields = ['task', 'student']
         widgets = {
             'task': forms.Select(attrs={'class': 'form-control'}),
+            'student': forms.Select(attrs={'class': 'form-control'}),
         }
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['student'].queryset = Student.objects.all()
+        print("Student widget in WorkSessionClockForm:", type(self.fields['student'].widget))
 
 class WorkSessionTimeRangeForm(forms.ModelForm):
     class Meta:
         model = WorkSession
-        fields = ['task', 'start_time', 'end_time']
+        fields = ['task', 'start_time', 'end_time', 'student']
         widgets = {
             'start_time': forms.DateTimeInput(attrs={'type': 'datetime-local'}),
             'end_time': forms.DateTimeInput(attrs={'type': 'datetime-local'}),
+            'student': forms.Select(attrs={'class': 'form-control'}),
         }
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['student'].queryset = Student.objects.all()
+        print("Student widget in WorkSessionTimeRangeForm:", type(self.fields['student'].widget))
 
 class WorkSessionFilterForm(forms.Form):
     """

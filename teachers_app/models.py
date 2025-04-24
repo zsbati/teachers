@@ -4,7 +4,7 @@ from django.conf import settings
 from django.contrib.contenttypes.models import ContentType
 from django.utils import timezone
 from decimal import Decimal, ROUND_HALF_UP
-from django.db.models import Sum, F
+from django.db.models import Sum
 from datetime import datetime
 
 
@@ -24,6 +24,14 @@ class Teacher(models.Model):
     def __str__(self):
         return f"{self.user.username} - {self.subjects}" if self.subjects else self.user.username
 
+# Student model using current AUTH_USER_MODEL (profile)
+class Student(models.Model):
+    user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    phone = models.CharField(max_length=20, blank=True, null=True)
+    is_active = models.BooleanField(default=True)
+
+    def __str__(self):
+        return self.user.username
 
 # Task Model (different types of work with their rates)
 class Task(models.Model):
@@ -55,7 +63,12 @@ class WorkSession(models.Model):
     stored_hours = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)  # Store the hours at creation time
     is_deleted = models.BooleanField(default=False)
     deleted_at = models.DateTimeField(null=True, blank=True)
-
+    student = models.ForeignKey(
+    Student,
+    on_delete=models.SET_NULL,
+    null=True,    # Makes it nullable in the DB
+    blank=True    # Allows blank in forms
+)
     # For manual entry
     manual_hours = models.DecimalField(max_digits=5, decimal_places=2, null=True, blank=True)
 
@@ -167,14 +180,6 @@ class WorkSession(models.Model):
         return f"{self.teacher} - {self.task} - {self.clock_in} to {self.clock_out}"
 
 
-# Student model using current AUTH_USER_MODEL (profile)
-class Student(models.Model):
-    user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
-    phone = models.CharField(max_length=20, blank=True, null=True)
-    is_active = models.BooleanField(default=True)
-
-    def __str__(self):
-        return self.user.username
 
 
 # Inspector Model (Base class with view-only privileges)

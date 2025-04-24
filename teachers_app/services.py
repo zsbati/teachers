@@ -1,6 +1,7 @@
 from decimal import Decimal, ROUND_HALF_UP
 import django.utils.timezone as timezone
-from .models import Teacher, Task, WorkSession
+from dal import autocomplete
+from .models import Teacher, Task, WorkSession, Student
 
 
 class SalaryCalculationService:
@@ -63,6 +64,7 @@ class SalaryCalculationService:
                         'hours': float(hours_decimal),
                         'rate': session.hourly_rate if session.hourly_rate is not None else task.hourly_rate,
                         'total': session_total,
+                        'student': getattr(session.student, 'name', None) if getattr(session, 'student', None) else None,
                         'entry_type': session.entry_type,
                         'notes': f"{session}"
                     })
@@ -78,6 +80,7 @@ class SalaryCalculationService:
                 'task_name': task.name,
                 'hours': float(rounded_hours),
                 'rate': task.hourly_rate,
+                'student': getattr(session.student, 'name', None) if getattr(session, 'student', None) else None,
                 'total': task_total
             })
 

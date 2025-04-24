@@ -8,6 +8,7 @@ from django.db.models import Sum
 from django.db.models.functions import Coalesce
 from django.core.exceptions import PermissionDenied
 from django.http import Http404, HttpResponseForbidden
+from dal import autocomplete
 
 # Import models from models.py
 from .models import Task, WorkSession, Teacher, Student, CustomUser, SalaryReport
@@ -481,45 +482,43 @@ def record_work(request, teacher_id=None):
         else:
             return HttpResponseForbidden("Superusers must specify a teacher to record work for.")
 
+    # Always define all forms
+    manual_form = WorkSessionManualForm()
+    clock_form = WorkSessionClockForm()
+    time_range_form = WorkSessionTimeRangeForm()
+
     if request.method == 'POST':
         entry_type = request.POST.get('entry_type')
 
         if entry_type == 'manual':
-            form = WorkSessionManualForm(request.POST)
-            if form.is_valid():
-                work_session = form.save(commit=False)
+            manual_form = WorkSessionManualForm(request.POST)
+            if manual_form.is_valid():
+                work_session = manual_form.save(commit=False)
                 work_session.teacher = teacher
                 work_session.entry_type = 'manual'
                 work_session.save()
                 messages.success(request, f'Work hours recorded successfully for {teacher.user.username}!')
                 return redirect('record_work_with_teacher', teacher_id=teacher.id)
-
         elif entry_type == 'clock':
-            form = WorkSessionClockForm(request.POST)
-            if form.is_valid():
-                work_session = form.save(commit=False)
+            clock_form = WorkSessionClockForm(request.POST)
+            if clock_form.is_valid():
+                work_session = clock_form.save(commit=False)
                 work_session.teacher = teacher
                 work_session.entry_type = 'clock'
                 work_session.clock_in = timezone.now()
                 work_session.save()
                 messages.success(request, f'Clock-in recorded successfully for {teacher.user.username}!')
                 return redirect('record_work_with_teacher', teacher_id=teacher.id)
-
         elif entry_type == 'time_range':
-            form = WorkSessionTimeRangeForm(request.POST)
-            if form.is_valid():
-                work_session = form.save(commit=False)
+            time_range_form = WorkSessionTimeRangeForm(request.POST)
+            if time_range_form.is_valid():
+                work_session = time_range_form.save(commit=False)
                 work_session.teacher = teacher
                 work_session.entry_type = 'time_range'
                 work_session.save()
                 messages.success(request,
                                  f'Work hours recorded successfully with a time range for {teacher.user.username}!')
                 return redirect('record_work_with_teacher', teacher_id=teacher.id)
-
-    else:
-        manual_form = WorkSessionManualForm()
-        clock_form = WorkSessionClockForm()
-        time_range_form = WorkSessionTimeRangeForm()
 
     # Get the active session for the teacher
     active_session = WorkSession.objects.filter(
@@ -788,3 +787,11 @@ def view_deactivated_students(request):
         'deactivated_students': deactivated_students
     }
     return render(request, 'superuser/view_deactivated_students.html', context)
+
+
+class StudentAutocomplete(autocomplete.Select2QuerySetView):
+    def get_queryset(self):
+        qs = Student.objects.all()
+        if self.q:
+            qs = qs.filter(user__username__icontains=self.q)
+        return qs
