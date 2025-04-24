@@ -1,3 +1,4 @@
+from django.contrib.auth import update_session_auth_hash
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django import forms
 from django.shortcuts import render, redirect, get_object_or_404
@@ -6,7 +7,7 @@ from django.contrib import messages
 from django.db.models import Sum
 from django.db.models.functions import Coalesce
 from django.core.exceptions import PermissionDenied
-from django.http import Http404
+from django.http import Http404, HttpResponseForbidden
 
 # Import models from models.py
 from .models import Task, WorkSession, Teacher, Student, CustomUser, SalaryReport
