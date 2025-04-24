@@ -1,0 +1,88 @@
+# Teachers Management Web Application
+
+## Overview
+
+This project is a web application for managing teachers, their work records, salary reports, and student information. It is built primarily in Python using the Django framework for the backend, and HTML, CSS, and JavaScript for the frontend.
+
+## Features
+
+- Teacher authentication and dashboard
+- Record and view work logs 
+- Generate and view teacher salary reports
+- Manage student records (add, edit, remove)
+- Role-based access (teacher, superuser/admin)
+- Superusers can:
+  - Open and delete student and teacher accounts
+  - Create, edit, and remove taxes and services
+  - Perform billing
+  - Record work sessions for teachers
+  - Calculate teacher salaries
+  - Generate and update salary reports for teachers
+    - Creating a new salary report for a period will replace any existing report for that period
+    - Changes to prices or teacher rates will not affect previously generated bills or salary reports; historical values are preserved for accurate record-keeping
+- Teachers can:
+  - Record work sessions for themselves and view them
+    - (This feature can be deactivated for some schools/tutoring centers)
+  - View their own salary reports
+- Students can:
+  - View their own bills
+  - Edit their own contact information (telephone and email)
+
+## Tech Stack
+
+- **Backend:** Python (Django)
+- **Frontend:** HTML, CSS, JavaScript (Django templating)
+- **Database:** SQLite (default, can be switched to PostgreSQL/MySQL)
+
+## Getting Started
+
+### Prerequisites
+
+- Python 3.x
+- pip (Python package manager)
+
+### Installation
+
+1. Clone the repository:
+   ```bash
+   git clone https://github.com/yourusername/teachers.git
+   cd teachers
+   ```
+
+2. Install dependencies:
+   ```bash
+   pip install -r requirements.txt
+   ```
+
+3. Apply migrations to set up the database:
+   ```bash
+   python manage.py migrate
+   ```
+
+4. Create a superuser to access the admin panel:
+   ```bash
+   python manage.py createsuperuser
+   ```
+
+5. Run the development server:
+   ```bash
+   python manage.py runserver
+   ```
+
+6. Access the application at `http://127.0.0.1:8000`
+
+## Folder Structure
+
+- `templates/` - HTML templates
+- `static/` - Static files (CSS, JS, images)
+- `teachers/` - Main Django app
+- `manage.py` - Django project entry point
+- `requirements.txt` - Python dependencies
+
+## Contributing
+
+Contributions are welcome! Please open issues or submit pull requests.
+
+## License
+
+To be decided. The license for this project has not been chosen yet.
