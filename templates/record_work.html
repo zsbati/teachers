@@ -84,6 +84,46 @@
         </div>
     </div>
 </div>
+
+<!-- Recent Work Sessions Table -->
+<div class="row">
+    <div class="col-md-12">
+        <div class="card mt-4">
+            <div class="card-header">
+                <h4>Recent Work Sessions</h4>
+            </div>
+            <div class="card-body">
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Task</th>
+                            <th>Student</th>
+                            <th>Entry Type</th>
+                            <th>Hours</th>
+                            <th>Notes</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for session in completed_sessions|dictsortreversed:"created_at" %}
+                        <tr>
+                            <td>{{ session.created_at|date:"Y-m-d H:i" }}</td>
+                            <td>{{ session.task }}</td>
+                            <td>{{ session.student }}</td>
+                            <td>{{ session.entry_type }}</td>
+                            <td>{{ session.manual_hours|default:session.get_duration_display }}</td>
+                            <td>{{ session.notes|default:"" }}</td>
+                        </tr>
+                        {% empty %}
+                        <tr><td colspan="6">No recent work sessions.</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
 <script>
     (function() {
         if (window.__dal_ready) return;
