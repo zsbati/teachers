@@ -55,8 +55,8 @@ urlpatterns = [
     # Billing URLs
     path('superuser/billing/', billing_views.select_student_for_billing, name='select_student_billing'),
     path('superuser/create-bill/', billing_views.select_student_for_bill_creation, name='select_student_for_bill_creation'),
+    path('superuser/bill-all-students/', billing_views.bill_all_students, name='bill_all_students'),
     path('student/<int:student_id>/bills/', billing_views.student_bills, name='student_bills'),
     path('student/<int:student_id>/bills/create/', billing_views.create_bill, name='create_bill'),
     path('bill/<int:bill_id>/', billing_views.bill_detail, name='bill_detail'),
-
 ]

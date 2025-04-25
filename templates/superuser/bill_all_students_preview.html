@@ -1,0 +1,51 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block content %}
+<div class="container mt-4">
+    <div class="card">
+        <div class="card-header bg-primary text-white">
+            <h2 class="mb-0">Bill All Students for {{ month_name }} {{ year }}</h2>
+        </div>
+        <div class="card-body">
+            <form method="post">
+                {% csrf_token %}
+                <table class="table table-bordered table-striped mt-3">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Student</th>
+                            <th>Work Sessions</th>
+                            <th>Status</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in preview_data %}
+                        <tr>
+                            <td>{{ item.student }}</td>
+                            <td>{{ item.work_sessions }}</td>
+                            <td>
+                                {% if item.already_billed %}
+                                    <span class="badge bg-warning text-dark">Already Billed</span>
+                                    {% if item.paid %}<span class="badge bg-success">Paid</span>{% endif %}
+                                {% else %}
+                                    <span class="badge bg-secondary">Not Billed</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if not item.already_billed %}
+                                    <span class="text-success">Will be billed</span>
+                                {% else %}
+                                    <input type="radio" name="action_{{ item.student.id }}" value="skip" checked> Skip
+                                    <input type="radio" name="action_{{ item.student.id }}" value="update"> Update{% if item.paid %} (confirm to update paid bill){% endif %}
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                <button type="submit" name="confirm" class="btn btn-primary">Confirm and Process</button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

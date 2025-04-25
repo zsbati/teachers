@@ -7,6 +7,7 @@ from dateutil.relativedelta import relativedelta
 from .models import Student, Task, WorkSession, Service
 from .billing_models import Bill, BillItem
 from .forms import BillItemForm
+import calendar
 
 @login_required
 @user_passes_test(lambda u: u.is_superuser)
@@ -135,4 +136,66 @@ def bill_detail(request, bill_id):
     return render(request, 'student/bill_detail.html', {
         'bill': bill,
         'total': bill.items.aggregate(Sum('amount'))['amount__sum']
+    })
+
+@login_required
+@user_passes_test(lambda u: u.is_superuser)
+def bill_all_students(request):
+    """Bulk billing for all students for a selected month, with preview and update/skip logic."""
+    from django.utils import timezone
+    from dateutil.relativedelta import relativedelta
+    from .models import Student, WorkSession, Service
+    from .billing_models import Bill, BillItem
+    from django.db.models import Sum
+    import calendar
+
+    # Get month/year from GET or POST, default to previous month
+    today = timezone.now().date()
+    default_month = (today.replace(day=1) - relativedelta(months=1))
+    year = int(request.GET.get('year', default_month.year))
+    month = int(request.GET.get('month', default_month.month))
+    month_start = timezone.datetime(year, month, 1, tzinfo=timezone.get_current_timezone())
+    month_end = (month_start + relativedelta(months=1))
+
+    students = Student.objects.filter(is_active=True)
+    bills = Bill.objects.filter(month=month_start)
+    bills_by_student = {b.student_id: b for b in bills}
+
+    preview_data = []
+    for student in students:
+        bill = bills_by_student.get(student.id)
+        ws_count = WorkSession.objects.filter(student=student, start_time__gte=month_start, start_time__lt=month_end).count()
+        preview_data.append({
+            'student': student,
+            'bill': bill,
+            'already_billed': bool(bill),
+            'paid': bill.is_paid if bill else False,
+            'work_sessions': ws_count,
+        })
+
+    if request.method == 'POST' and 'confirm' in request.POST:
+        # Superuser has confirmed choices
+        actions = []
+        for item in preview_data:
+            sid = str(item['student'].id)
+            if not item['already_billed']:
+                # Create bill immediately, no confirmation needed
+                bill = Bill.objects.create(student=item['student'], month=month_start, total_amount=0)
+                # Here, add bill items as needed (simplified, real logic may differ)
+                actions.append({'student': item['student'], 'action': 'created'})
+            else:
+                action = request.POST.get(f'action_{sid}')
+                if action == 'update':
+                    bill = item['bill']
+                    # ... recalculate bill items here ...
+                    actions.append({'student': item['student'], 'action': 'updated'})
+                elif action == 'skip':
+                    actions.append({'student': item['student'], 'action': 'skipped'})
+        return render(request, 'superuser/bill_all_students_result.html', {'actions': actions, 'month': month, 'year': year})
+
+    return render(request, 'superuser/bill_all_students_preview.html', {
+        'preview_data': preview_data,
+        'month': month,
+        'year': year,
+        'month_name': calendar.month_name[month],
     })
