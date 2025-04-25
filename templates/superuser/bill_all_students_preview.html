@@ -7,6 +7,27 @@
             <h2 class="mb-0">Bill All Students for {{ month_name }} {{ year }}</h2>
         </div>
         <div class="card-body">
+            <form method="get" class="row g-2 mb-3">
+                <div class="col-auto">
+                    <label for="month" class="col-form-label">Month:</label>
+                </div>
+                <div class="col-auto">
+                    <select name="month" id="month" class="form-select">
+                        {% for m in months %}
+                        <option value="{{ m.value }}" {% if m.value == month %}selected{% endif %}>{{ m.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-auto">
+                    <label for="year" class="col-form-label">Year:</label>
+                </div>
+                <div class="col-auto">
+                    <input type="number" name="year" id="year" class="form-control" value="{{ year }}" min="2000" max="2100">
+                </div>
+                <div class="col-auto">
+                    <button type="submit" class="btn btn-outline-primary">Change</button>
+                </div>
+            </form>
             <form method="post">
                 {% csrf_token %}
                 <table class="table table-bordered table-striped mt-3">

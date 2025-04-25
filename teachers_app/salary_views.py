@@ -62,9 +62,15 @@ def salary_reports_bulk(request):
                     actions.append({'teacher': item['teacher'], 'action': 'skipped'})
         return render(request, 'superuser/salary_reports_bulk_result.html', {'actions': actions, 'month': month, 'year': year})
 
+    # Prepare months list for template (1-based)
+    months = [
+        {'value': i, 'name': calendar.month_name[i]} for i in range(1, 13)
+    ]
+
     return render(request, 'superuser/salary_reports_bulk_preview.html', {
         'preview_data': preview_data,
         'month': month,
         'year': year,
         'month_name': calendar.month_name[month],
+        'months': months,
     })
