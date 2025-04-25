@@ -41,13 +41,16 @@ class StudentBillingService:
         )
         
         # Create the BillItem
+        service_price = work_session.task.price
+        quantity = work_session.stored_hours or 0
+        amount = service_price * quantity
         bill_item = BillItem.objects.create(
             bill=bill,
             service_name=work_session.task.name,
             service_description=work_session.task.description or '',
-            service_price_at_billing=work_session.task.price,
-            quantity=work_session.stored_hours or 0,
-            amount=work_session.total_amount or 0,
+            service_price_at_billing=service_price,
+            quantity=quantity,
+            amount=amount,
         )
         
         # Update the Bill's total_amount

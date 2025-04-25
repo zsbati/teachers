@@ -57,6 +57,7 @@
                                 <tr>
                                     <th>Name</th>
                                     <th>Hourly Rate</th>
+                                    <th>Student Price</th>
                                     <th>Description</th>
                                     <th>Actions</th>
                                 </tr>
@@ -66,6 +67,7 @@
                                 <tr>
                                     <td>{{ task.name }}</td>
                                     <td>${{ task.hourly_rate }}</td>
+                                    <td>${{ task.price }}</td>
                                     <td>{{ task.description|default:"Not specified"|truncatewords:10 }}</td>
                                     <td>
                                         <div class="btn-group">
@@ -80,7 +82,7 @@
                                 </tr>
                                 {% empty %}
                                 <tr>
-                                    <td colspan="4" class="text-center">No tasks found.</td>
+                                    <td colspan="5" class="text-center">No tasks found.</td>
                                 </tr>
                                 {% endfor %}
                             </tbody>
