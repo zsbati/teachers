@@ -8,7 +8,6 @@ from django.db.models import Sum
 from django.db.models.functions import Coalesce
 from django.core.exceptions import PermissionDenied
 from django.http import Http404, HttpResponseForbidden
-from dal import autocomplete
 
 # Import models from models.py
 from .models import Task, WorkSession, Teacher, Student, CustomUser, SalaryReport
@@ -789,9 +788,4 @@ def view_deactivated_students(request):
     return render(request, 'superuser/view_deactivated_students.html', context)
 
 
-class StudentAutocomplete(autocomplete.Select2QuerySetView):
-    def get_queryset(self):
-        qs = Student.objects.all()
-        if self.q:
-            qs = qs.filter(user__username__icontains=self.q)
-        return qs
+

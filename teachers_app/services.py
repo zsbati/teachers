@@ -1,6 +1,5 @@
 from decimal import Decimal, ROUND_HALF_UP
 import django.utils.timezone as timezone
-from dal import autocomplete
 from .models import Teacher, Task, WorkSession, Student
 
 

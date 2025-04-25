@@ -1,6 +1,5 @@
 from django import forms
 from django.contrib.auth.forms import PasswordChangeForm, UserCreationForm
-from dal import autocomplete
 from .models import Teacher, CustomUser, Task, WorkSession, SalaryReport, Student, Service
 from .billing_models import BillItem
 

@@ -2,7 +2,6 @@ from django.urls import path
 from django.contrib.auth import views as auth_views
 from . import views, billing_views
 from .service_views import manage_services, add_service, edit_service, delete_service
-from .views import StudentAutocomplete
 
 urlpatterns = [
     path('superuser/manage-services/', manage_services, name='manage_services'),
@@ -59,5 +58,5 @@ urlpatterns = [
     path('student/<int:student_id>/bills/', billing_views.student_bills, name='student_bills'),
     path('student/<int:student_id>/bills/create/', billing_views.create_bill, name='create_bill'),
     path('bill/<int:bill_id>/', billing_views.bill_detail, name='bill_detail'),
-    path('student-autocomplete/', StudentAutocomplete.as_view(), name='student-autocomplete'),
+
 ]
