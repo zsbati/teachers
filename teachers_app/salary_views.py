@@ -1,0 +1,70 @@
+from django.shortcuts import render, redirect
+from django.contrib import messages
+from django.contrib.auth.decorators import login_required, user_passes_test
+from django.utils import timezone
+from dateutil.relativedelta import relativedelta
+from .models import Teacher, SalaryReport
+from .services import SalaryCalculationService
+import calendar
+
+@login_required
+@user_passes_test(lambda u: u.is_superuser)
+def salary_reports_bulk(request):
+    """
+    Bulk salary report creation/updating for all teachers for a selected month, with preview and update/skip logic.
+    """
+    today = timezone.now().date()
+    default_month = (today.replace(day=1) - relativedelta(months=1))
+    month = int(request.GET.get('month', default_month.month))
+    year = int(request.GET.get('year', default_month.year))
+    month_start = timezone.make_aware(timezone.datetime(year, month, 1))
+    if month == 12:
+        month_end = timezone.make_aware(timezone.datetime(year + 1, 1, 1))
+    else:
+        month_end = timezone.make_aware(timezone.datetime(year, month + 1, 1))
+    month_end = month_end - timezone.timedelta(microseconds=1)
+
+    teachers = Teacher.objects.all()
+    preview_data = []
+    for teacher in teachers:
+        report = SalaryReport.objects.filter(teacher=teacher, start_date=month_start, end_date=month_end, is_deleted=False).first()
+        is_paid = getattr(report, 'is_paid', False) if report else False
+        preview_data.append({
+            'teacher': teacher,
+            'report': report,
+            'already_exists': bool(report),
+            'paid': is_paid,
+        })
+
+    if request.method == 'POST':
+        actions = []
+        for item in preview_data:
+            action = request.POST.get(f'action_{item["teacher"].id}', 'skip')
+            if not item['already_exists'] and action == 'create':
+                # Create salary report
+                SalaryReport.create_for_month(
+                    teacher=item['teacher'],
+                    year=year,
+                    month=month,
+                    created_by=request.user,
+                )
+                actions.append({'teacher': item['teacher'], 'action': 'created'})
+            elif item['already_exists']:
+                if action == 'update' and item['report']:
+                    # Update: Recalculate and update totals (simulate update)
+                    report = item['report']
+                    report_data = SalaryCalculationService.calculate_salary(item['teacher'], year, month)
+                    report.total_hours = report_data.get('total_hours')
+                    report.total_amount = report_data.get('total_salary')
+                    report.save(update_fields=['total_hours', 'total_amount'])
+                    actions.append({'teacher': item['teacher'], 'action': 'updated'})
+                elif action == 'skip':
+                    actions.append({'teacher': item['teacher'], 'action': 'skipped'})
+        return render(request, 'superuser/salary_reports_bulk_result.html', {'actions': actions, 'month': month, 'year': year})
+
+    return render(request, 'superuser/salary_reports_bulk_preview.html', {
+        'preview_data': preview_data,
+        'month': month,
+        'year': year,
+        'month_name': calendar.month_name[month],
+    })

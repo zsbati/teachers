@@ -1,0 +1,58 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container mt-4">
+    <div class="card">
+        <div class="card-header bg-primary text-white">
+            <h2 class="mb-0">Bulk Salary Reports Preview for {{ month_name }} {{ year }}</h2>
+        </div>
+        <div class="card-body">
+            <form method="post">
+                {% csrf_token %}
+                <table class="table table-bordered table-striped mt-3">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Teacher</th>
+                            <th>Status</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in preview_data %}
+                        <tr>
+                            <td>{{ item.teacher }}</td>
+                            <td>
+                                {% if not item.already_exists %}
+                                    <span class="badge bg-success">Will be created</span>
+                                {% else %}
+                                    <span class="badge bg-warning text-dark">Already exists{% if item.paid %}, Paid{% endif %}</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if not item.already_exists %}
+                                    <input type="hidden" name="action_{{ item.teacher.id }}" value="create">
+                                    <span class="text-success">Will be created</span>
+                                {% else %}
+                                    {% if item.paid %}
+                                        <select name="action_{{ item.teacher.id }}" class="form-select">
+                                            <option value="skip" selected>Skip</option>
+                                            <option value="update">Update (Paid!)</option>
+                                        </select>
+                                    {% else %}
+                                        <select name="action_{{ item.teacher.id }}" class="form-select">
+                                            <option value="skip" selected>Skip</option>
+                                            <option value="update">Update</option>
+                                        </select>
+                                    {% endif %}
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                <button type="submit" class="btn btn-primary mt-3">Confirm Bulk Salary Reports</button>
+            </form>
+            <a href="{% url 'dashboard' %}" class="btn btn-secondary mt-3">Go Back</a>
+        </div>
+    </div>
+</div>
+{% endblock %}

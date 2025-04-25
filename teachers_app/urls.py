@@ -1,6 +1,6 @@
 from django.urls import path
 from django.contrib.auth import views as auth_views
-from . import views, billing_views
+from . import views, billing_views, salary_views
 from .service_views import manage_services, add_service, edit_service, delete_service
 
 urlpatterns = [
@@ -51,6 +51,9 @@ urlpatterns = [
     path('superuser/salary-reports/<int:report_id>/delete/', views.delete_salary_report, name='delete_salary_report'),
     path('dashboard/teacher/salary-reports/', views.teacher_salary_reports, name='teacher_salary_reports'),
     path('dashboard/teacher/salary-reports/<int:teacher_id>/<int:year>/<int:month>/', views.view_salary_report, name='teacher_view_salary_report'),
+
+    # Bulk Salary Reports for All Teachers
+    path('dashboard/superuser/salary-reports-bulk/', salary_views.salary_reports_bulk, name='salary_reports_bulk'),
 
     # Billing URLs
     path('superuser/billing/', billing_views.select_student_for_billing, name='select_student_billing'),

@@ -1,0 +1,37 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container mt-4">
+    <div class="card">
+        <div class="card-header bg-primary text-white">
+            <h2 class="mb-0">Bulk Salary Reports Results for {{ month }}/{{ year }}</h2>
+        </div>
+        <div class="card-body">
+            <table class="table table-bordered table-striped mt-3">
+                <thead class="table-light">
+                    <tr>
+                        <th>Teacher</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for action in actions %}
+                    <tr>
+                        <td>{{ action.teacher }}</td>
+                        <td>
+                            {% if action.action == 'created' %}
+                                <span class="badge bg-success">Report Created</span>
+                            {% elif action.action == 'updated' %}
+                                <span class="badge bg-warning text-dark">Report Updated</span>
+                            {% elif action.action == 'skipped' %}
+                                <span class="badge bg-secondary">Skipped</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            <a href="{% url 'salary_reports_bulk' %}?month={{ month }}&year={{ year }}" class="btn btn-primary mt-3">Go Back</a>
+        </div>
+    </div>
+</div>
+{% endblock %}
