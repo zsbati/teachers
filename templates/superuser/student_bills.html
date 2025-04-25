@@ -8,9 +8,11 @@
         <div class="card-body">
             <div class="row mb-3">
                 <div class="col-md-6">
+                    {% if user.is_superuser %}
                     <a href="{% url 'create_bill' student_id=student.id %}" class="btn btn-primary">
                         Create New Bill
                     </a>
+                    {% endif %}
                 </div>
                 <div class="col-md-6 text-end">
                     <a href="{% url 'manage_students' %}" class="btn btn-secondary">
@@ -26,7 +28,7 @@
                             <th>Month</th>
                             <th>Total Amount</th>
                             <th>Status</th>
-                            <th>Actions</th>
+                            {% if user.is_superuser %}<th>Actions</th>{% endif %}
                         </tr>
                     </thead>
                     <tbody>
@@ -41,6 +43,7 @@
                                 <span class="badge bg-warning">Unpaid</span>
                                 {% endif %}
                             </td>
+                            {% if user.is_superuser %}
                             <td>
                                 <a href="{% url 'bill_detail' bill_id=bill.id %}" class="btn btn-sm btn-info">
                                     View Details
@@ -51,6 +54,7 @@
                                 </a>
                                 {% endif %}
                             </td>
+                            {% endif %}
                         </tr>
                         {% empty %}
                         <tr>

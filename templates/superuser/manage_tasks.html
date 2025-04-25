@@ -6,6 +6,7 @@
 <div class="container mt-4">
     <div class="row">
         <!-- Add Task Form -->
+        {% if user.is_inspector %}
         <div class="col-md-4">
             <div class="card">
                 <div class="card-header">
@@ -43,6 +44,7 @@
                 </div>
             </div>
         </div>
+        {% endif %}
 
         <!-- Modernized Tasks Card/Table -->
         <div class="container my-5">
@@ -61,7 +63,9 @@
                           <th>Hourly Rate</th>
                           <th>Student Price</th>
                           <th>Description</th>
+                          {% if user.is_inspector %}
                           <th>Actions</th>
+                          {% endif %}
                         </tr>
                       </thead>
                       <tbody>
@@ -71,15 +75,17 @@
                           <td>${{ task.hourly_rate }}</td>
                           <td>${{ task.price }}</td>
                           <td>{{ task.description|default:"Not specified"|truncatewords:10 }}</td>
+                          {% if user.is_inspector %}
                           <td>
                             <div class="btn-group btn-group-sm">
                               <a href="{% url 'edit_task' task.id %}" class="btn btn-outline-warning"><i class="fas fa-edit"></i></a>
                               <a href="{% url 'remove_task' task.id %}" class="btn btn-outline-danger"><i class="fas fa-trash"></i></a>
                             </div>
                           </td>
+                          {% endif %}
                         </tr>
                         {% empty %}
-                        <tr><td colspan="5" class="text-center">No tasks found.</td></tr>
+                        <tr><td colspan="{% if user.is_inspector %}5{% else %}4{% endif %}" class="text-center">No tasks found.</td></tr>
                         {% endfor %}
                       </tbody>
                     </table>

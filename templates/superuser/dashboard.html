@@ -11,6 +11,7 @@
     </div>
     <div class="card-body">
         <div class="row">
+            {% if user.is_superuser %}
             <!-- Left column: Bill All Students and future features -->
             <div class="col-md-4 mb-3">
                 <div class="card h-100">
@@ -18,16 +19,22 @@
                         <i class="bi bi-cash-coin"></i> Billing & Bulk Actions
                     </div>
                     <div class="card-body d-flex flex-column align-items-center justify-content-center">
-                        <a href="{% url 'bill_all_students' %}" class="btn btn-primary btn-lg w-100 mb-2">
-                            <i class="bi bi-cash-coin"></i> Bill All Students
-                        </a>
-                        <a href="{% url 'salary_reports_bulk' %}" class="btn btn-success btn-lg w-100">
-                            <i class="bi bi-people-fill"></i> Salary Reports for All Teachers
-                        </a>
-                        <!-- Placeholder for more left-column features -->
+                        <div class="list-group">
+                            {% if user.is_superuser %}
+                            <a href="{% url 'bill_all_students' %}" class="btn btn-primary btn-lg w-100 mb-2">
+                                <i class="bi bi-cash-coin"></i> Bill All Students
+                            </a>
+                            <a href="{% url 'select_student_for_bill_creation' %}" class="text-decoration-none">Create New Bill</a>
+                            {% endif %}
+                            <a href="{% url 'select_student_billing' %}" class="text-decoration-none">Manage Student Billing</a>
+                            <a href="{% url 'salary_reports_bulk' %}" class="btn btn-success btn-lg w-100">
+                                <i class="bi bi-people-fill"></i> Salary Reports for All Teachers
+                            </a>
+                        </div>
                     </div>
                 </div>
             </div>
+            {% endif %}
             <!-- Right column: Existing dashboard features -->
             <div class="col-md-8">
                 <div class="card mb-3">
@@ -52,21 +59,27 @@
                             <li class="list-group-item">
                                 <a href="{% url 'list_salary_reports' %}" class="text-decoration-none">Salary Reports</a>
                             </li>
+                            {% if user.is_superuser %}
                             <li class="list-group-item">
                                 <a href="{% url 'create_salary_report' %}" class="text-decoration-none">Create New Salary Report</a>
                             </li>
+                            {% endif %}
                             <li class="list-group-item">
                                 <a href="{% url 'manage_services' %}" class="text-decoration-none">Manage Services</a>
                             </li>
+                            {% if user.is_superuser %}
                             <li class="list-group-item">
                                 <a href="{% url 'select_student_for_bill_creation' %}" class="text-decoration-none">Create New Bill</a>
                             </li>
+                            {% endif %}
                             <li class="list-group-item">
                                 <a href="{% url 'select_student_billing' %}" class="text-decoration-none">Manage Student Billing</a>
                             </li>
+                            {% if user.is_superuser %}
                             <li class="list-group-item">
                                 <a href="{% url 'manage_inspectors' %}" class="text-decoration-none">Manage Inspectors</a>
                             </li>
+                            {% endif %}
                         </ul>
                     </div>
                 </div>

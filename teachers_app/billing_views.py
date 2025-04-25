@@ -103,7 +103,7 @@ def select_student_for_bill_creation(request):
     })
 
 @login_required
-@user_passes_test(lambda u: u.is_superuser)
+@user_passes_test(lambda u: u.is_inspector, login_url=None)
 def select_student_for_billing(request):
     """View to select a student for billing"""
     students = Student.objects.all()

@@ -15,7 +15,9 @@
                             All Salary Reports
                         {% endif %}
                     </h2>
+                    {% if user.is_superuser %}
                     <a href="{% url 'create_salary_report' %}" class="btn btn-primary">Create New Report</a>
+                    {% endif %}
                 </div>
                 <div class="card-body">
                     {% if reports %}

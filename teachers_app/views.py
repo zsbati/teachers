@@ -53,11 +53,11 @@ def dashboard_redirect(request):
     """
     Redirects the user to the appropriate dashboard based on their role.
     """
-    if request.user.is_superuser:
+    if request.user.is_superuser or getattr(request.user, 'is_inspector', False):
         return redirect('superuser_dashboard')
-    elif hasattr(request.user, 'is_student') and request.user.is_student:
+    elif getattr(request.user, 'is_student', False):
         return redirect('student_dashboard')
-    elif request.user.is_teacher:
+    elif getattr(request.user, 'is_teacher', False):
         return redirect('teachers_dashboard')
     else:
         return redirect('dashboard_login')
@@ -80,12 +80,14 @@ def student_dashboard(request):
 
 
 @login_required
-@user_passes_test(lambda u: u.is_superuser)
+@user_passes_test(lambda u: u.is_inspector, login_url=None)
 def superuser_dashboard(request):
     """
-    View for the superuser's dashboard.
+    Dashboard for both superuser and inspector roles.
+    Inspectors see all info but cannot edit/add/delete.
     """
-    return render(request, 'superuser/dashboard.html')
+    can_edit = request.user.is_superuser
+    return render(request, 'superuser/dashboard.html', {'can_edit': can_edit})
 
 
 @login_required
@@ -106,19 +108,32 @@ def change_password(request):
 
 
 @login_required
-@user_passes_test(lambda u: u.is_superuser)
+@user_passes_test(lambda u: u.is_inspector, login_url=None)
 def manage_teachers(request):
-    if request.method == "POST":
+    teachers = Teacher.objects.all()
+    can_edit = request.user.is_superuser
+    if request.method == "POST" and can_edit:
         form = AddTeacherForm(request.POST)
         if form.is_valid():
-            # Create user
+            username = form.cleaned_data['username']
+            email = form.cleaned_data['email']
+            # Check for lingering CustomUser before creation
+            from .models import CustomUser
+            lingering_user = CustomUser.objects.filter(username=username).first()
+            if lingering_user:
+                try:
+                    lingering_user.delete()
+                    messages.warning(request, f"Lingering user '{username}' found and deleted before re-adding.")
+                except Exception as e:
+                    messages.error(request, f"Failed to delete lingering user '{username}': {e}")
+                    return redirect('manage_teachers')
+            # Now create user and teacher
             user = CustomUser.objects.create_user(
-                username=form.cleaned_data['username'],
-                email=form.cleaned_data['email'],
+                username=username,
+                email=email,
                 password=form.cleaned_data['password'],
                 is_teacher=True
             )
-            # Create teacher
             Teacher.objects.create(
                 user=user,
                 subjects=form.cleaned_data['subjects']
@@ -127,37 +142,90 @@ def manage_teachers(request):
             return redirect('manage_teachers')
         else:
             messages.error(request, 'Please correct the errors below.')
-            print("Form errors:", form.errors)  # Debug: Print form errors
     else:
         form = AddTeacherForm()
-
-    teachers = Teacher.objects.all()
-    print(f"Teachers in view: {teachers}")  # Debug: Print teachers in the view
-
     context = {
         'form': form,
         'teachers': teachers,
+        'can_edit': can_edit,
     }
     return render(request, 'superuser/manage_teachers.html', context)
 
 
 @login_required
-@user_passes_test(lambda u: u.is_superuser)
+@user_passes_test(lambda u: u.is_inspector, login_url=None)
 def manage_students(request):
     active_students = Student.objects.filter(is_active=True)
     deactivated_students = Student.objects.filter(is_active=False)
+    can_edit = request.user.is_superuser
     form = StudentCreationForm(request.POST or None)
-    if form.is_valid():
+    if form.is_valid() and can_edit:
         user = form.save()
+        # Set user as student
+        user.is_student = True
+        user.save()
+        # Create Student profile
+        Student.objects.create(
+            user=user,
+            phone=form.cleaned_data.get('phone', ''),
+            is_active=form.cleaned_data.get('is_active', True)
+        )
         messages.success(request, f'Student {user.username} created successfully.')
         return redirect('manage_students')
-    
     context = {
         'form': form,
         'active_students': active_students,
-        'deactivated_students': deactivated_students
+        'deactivated_students': deactivated_students,
+        'can_edit': can_edit,
     }
     return render(request, 'superuser/manage_students.html', context)
+
+
+@login_required
+@user_passes_test(lambda u: u.is_inspector, login_url=None)
+def manage_tasks(request):
+    can_edit = request.user.is_superuser
+    if request.method == "POST" and can_edit:
+        form = TaskForm(request.POST)
+        if form.is_valid():
+            task = form.save()
+            messages.success(request, f'Task "{task.name}" was successfully added!')
+            return redirect('manage_tasks')
+        else:
+            messages.error(request, 'Please correct the errors below.')
+            print("Form errors:", form.errors)  # Debugging
+    else:
+        form = TaskForm()
+
+    tasks = Task.objects.all()
+    print(f"Tasks in view: {tasks}")  # Debugging
+
+    context = {
+        'form': form,
+        'tasks': tasks,
+        'can_edit': can_edit,
+    }
+    return render(request, 'superuser/manage_tasks.html', context)
+
+
+@login_required
+@user_passes_test(lambda u: u.is_inspector, login_url=None)
+def manage_inspectors(request):
+    from .models import Inspector, CustomUser
+    from .forms import InspectorCreationForm
+    inspectors = Inspector.objects.select_related('user').all()
+    can_edit = request.user.is_superuser
+    form = InspectorCreationForm(request.POST or None)
+    if request.method == 'POST' and form.is_valid() and can_edit:
+        username = form.cleaned_data['username']
+        email = form.cleaned_data['email']
+        password = form.cleaned_data['password']
+        # Create user
+        user = CustomUser.objects.create_user(username=username, email=email, password=password, is_inspector=True)
+        Inspector.objects.create(user=user)
+        messages.success(request, f'Inspector {username} created successfully.')
+        return redirect('manage_inspectors')
+    return render(request, 'superuser/manage_inspectors.html', {'form': form, 'inspectors': inspectors, 'can_edit': can_edit})
 
 
 @login_required
@@ -234,36 +302,6 @@ def edit_own_profile(request):
         'is_own_profile': True
     }
     return render(request, 'student/edit_profile.html', context)
-    student = get_object_or_404(Student, id=student_id)
-    if request.method == "POST":
-        form = EditStudentForm(request.POST, instance=student)
-        if form.is_valid():
-            # Save the student profile
-            student = form.save(commit=False)
-            # Update the user's email if it changed
-            try:
-                if 'email' in form.cleaned_data and form.cleaned_data['email'] != student.user.email:
-                    student.user.email = form.cleaned_data['email']
-                    student.user.save()
-            except CustomUser.DoesNotExist:
-                pass  # No user associated, skip email update
-            student.save()
-            messages.success(request, f'Student {student.user.username} updated successfully.')
-            return redirect('manage_students')
-    else:
-        # Initialize form with current values
-        initial_data = {
-            'phone': student.phone,
-            'is_active': student.is_active,
-            'email': getattr(student.user, 'email', '')
-        }
-        form = EditStudentForm(initial=initial_data)
-    
-    context = {
-        'form': form,
-        'student': student,
-    }
-    return render(request, 'superuser/edit_student.html', context)
 
 
 @login_required
@@ -374,9 +412,10 @@ def delete_work_session(request, session_id):
     return render(request, 'superuser/confirm_work_session_deletion.html', context)
 
 @login_required
-@user_passes_test(lambda u: u.is_superuser)
+@user_passes_test(lambda u: u.is_inspector, login_url=None)
 def manage_tasks(request):
-    if request.method == "POST":
+    can_edit = request.user.is_superuser
+    if request.method == "POST" and can_edit:
         form = TaskForm(request.POST)
         if form.is_valid():
             task = form.save()
@@ -394,6 +433,7 @@ def manage_tasks(request):
     context = {
         'form': form,
         'tasks': tasks,
+        'can_edit': can_edit,
     }
     return render(request, 'superuser/manage_tasks.html', context)
 
@@ -428,14 +468,22 @@ def add_teacher(request):
 @login_required
 @user_passes_test(lambda u: u.is_superuser)
 def remove_teacher(request, teacher_id):
+    import logging
+    logger = logging.getLogger(__name__)
     try:
         teacher = Teacher.objects.get(id=teacher_id)
-        # Delete the associated user first (this will cascade delete the teacher)
-        teacher.user.delete()
-        messages.success(request, f'Teacher {teacher.user.username} has been successfully removed.')
+        user = teacher.user
+        teacher.delete()
+        try:
+            user.delete()
+            messages.success(request, f'Teacher {user.username} has been successfully removed.')
+        except Exception as ue:
+            logger.error(f"Error deleting user instance for teacher {teacher_id}: {ue}")
+            messages.error(request, f'Error deleting user instance: {ue}')
     except Teacher.DoesNotExist:
         messages.error(request, 'Teacher not found.')
     except Exception as e:
+        logger.error(f"Error removing teacher: {e}")
         messages.error(request, f'Error removing teacher: {str(e)}')
 
     return redirect('manage_teachers')
@@ -571,22 +619,19 @@ def clock_out(request, session_id):
 
 
 @login_required
-@user_passes_test(lambda u: u.is_superuser or u.is_teacher)  # Allow both roles to access
+@user_passes_test(lambda u: u.is_inspector, login_url=None)
 def recent_work_sessions(request, teacher_id=None):
-    # Check if the user is a teacher or a superuser
-    if not request.user.is_superuser:
-        # For teachers, get their own teacher instance
-        teacher = get_object_or_404(Teacher, user=request.user)
-    else:
-        # For superusers, get the teacher by ID
+    # Superusers and inspectors: must specify a teacher_id
+    if request.user.is_superuser or getattr(request.user, 'is_inspector', False):
+        if teacher_id is None:
+            return HttpResponseForbidden("You must specify a teacher to view sessions for.")
         teacher = get_object_or_404(Teacher, id=teacher_id)
+    # Teachers: always see their own sessions
+    else:
+        teacher = get_object_or_404(Teacher, user=request.user)
 
     # Fetch recent work sessions for the teacher
     work_sessions = WorkSession.objects.filter(teacher=teacher).order_by('-created_at')[:10]
-
-    # Debugging: Print the teacher and work sessions to the console
-    print(f"Teacher: {teacher}")
-    print(f"Work Sessions: {work_sessions}")
 
     context = {
         'teacher': teacher,
@@ -618,7 +663,7 @@ def change_teacher_password(request, teacher_id):
 
 
 @login_required
-@user_passes_test(lambda u: u.is_superuser)
+@user_passes_test(lambda u: u.is_inspector, login_url=None)
 def create_salary_report(request):
     if request.method == 'POST':
         form = SalaryReportForm(request.POST)
@@ -636,18 +681,7 @@ def create_salary_report(request):
                 end_date = timezone.datetime(year, month + 1, 1)
             end_date = end_date - timezone.timedelta(microseconds=1)
 
-            # Check if a report exists for this period
-            existing_reports = SalaryReport.objects.filter(
-                teacher=teacher,
-                start_date=start_date,
-                end_date=end_date
-            )
-            
-            if existing_reports.exists():
-                # Delete any existing reports for this period
-                existing_reports.delete()
-            
-            # Create a new report
+            # Create the report
             report = SalaryReport.objects.create(
                 teacher=teacher,
                 start_date=start_date,
@@ -655,8 +689,6 @@ def create_salary_report(request):
                 created_by=request.user,
                 notes=notes
             )
-
-            # Calculate salary details
             report_data = SalaryCalculationService.calculate_salary(teacher, year, month)
             
             # Since we're always creating a new report, we don't need to check if it was created
@@ -673,7 +705,7 @@ def create_salary_report(request):
 
 
 @login_required
-@teacher_or_superuser
+@user_passes_test(lambda u: u.is_inspector, login_url=None)
 def view_salary_report(request, teacher_id, year, month):
     teacher = get_object_or_404(Teacher, id=teacher_id)
     
@@ -709,7 +741,7 @@ def view_salary_report(request, teacher_id, year, month):
     report_data = SalaryCalculationService.calculate_salary(teacher, year, month)
 
     # Check permissions
-    if request.user.is_superuser:
+    if request.user.is_inspector:
         template = 'superuser/view_salary_report.html'
     elif request.user == teacher.user:
         template = 'teachers/view_salary_report.html'
@@ -724,7 +756,7 @@ def view_salary_report(request, teacher_id, year, month):
 
 
 @login_required
-@user_passes_test(lambda u: u.is_superuser)
+@user_passes_test(lambda u: u.is_inspector, login_url=None)
 def list_salary_reports(request, teacher_id=None):
     if teacher_id:
         teacher = get_object_or_404(Teacher, id=teacher_id)
@@ -756,7 +788,7 @@ def list_salary_reports(request, teacher_id=None):
 
 
 @login_required
-@user_passes_test(lambda u: u.is_superuser)
+@user_passes_test(lambda u: u.is_inspector, login_url=None)
 def delete_salary_report(request, report_id):
     """Delete a salary report and redirect back to the list."""
     report = get_object_or_404(SalaryReport, id=report_id)
@@ -799,13 +831,14 @@ def view_deactivated_students(request):
 
 
 @login_required
-@user_passes_test(lambda u: u.is_superuser)
+@user_passes_test(lambda u: u.is_inspector, login_url=None)
 def manage_inspectors(request):
     from .models import Inspector, CustomUser
     from .forms import InspectorCreationForm
     inspectors = Inspector.objects.select_related('user').all()
+    can_edit = request.user.is_superuser
     form = InspectorCreationForm(request.POST or None)
-    if request.method == 'POST' and form.is_valid():
+    if request.method == 'POST' and form.is_valid() and can_edit:
         username = form.cleaned_data['username']
         email = form.cleaned_data['email']
         password = form.cleaned_data['password']
@@ -814,7 +847,7 @@ def manage_inspectors(request):
         Inspector.objects.create(user=user)
         messages.success(request, f'Inspector {username} created successfully.')
         return redirect('manage_inspectors')
-    return render(request, 'superuser/manage_inspectors.html', {'form': form, 'inspectors': inspectors})
+    return render(request, 'superuser/manage_inspectors.html', {'form': form, 'inspectors': inspectors, 'can_edit': can_edit})
 
 @login_required
 @user_passes_test(lambda u: u.is_superuser)
