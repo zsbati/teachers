@@ -1,0 +1,47 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container mt-4">
+    <div class="card">
+        <div class="card-header bg-primary text-white">
+            <h2 class="mb-0">Manage Inspectors</h2>
+        </div>
+        <div class="card-body">
+            <h5>Add New Inspector</h5>
+            <form method="post" class="mb-4">
+                {% csrf_token %}
+                {{ form.as_p }}
+                <button type="submit" class="btn btn-success">Add Inspector</button>
+            </form>
+            <h5>Existing Inspectors</h5>
+            <table class="table table-bordered">
+                <thead>
+                    <tr>
+                        <th>Username</th>
+                        <th>Email</th>
+                        <th>Last Login</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for inspector in inspectors %}
+                    <tr>
+                        <td>{{ inspector.user.username }}</td>
+                        <td>{{ inspector.user.email }}</td>
+                        <td>{{ inspector.last_login }}</td>
+                        <td>
+                            <a href="{% url 'change_inspector_password' inspector.id %}" class="btn btn-warning btn-sm">Change Password</a>
+                            <form method="post" action="{% url 'delete_inspector' inspector.id %}" style="display:inline">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('Are you sure you want to delete this inspector?');">Delete</button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="4">No inspectors found.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

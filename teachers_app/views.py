@@ -10,7 +10,7 @@ from django.core.exceptions import PermissionDenied
 from django.http import Http404, HttpResponseForbidden
 
 # Import models from models.py
-from .models import Task, WorkSession, Teacher, Student, CustomUser, SalaryReport
+from .models import Task, WorkSession, Teacher, Student, CustomUser, SalaryReport, Inspector
 
 # Import billing models from billing_models.py
 from .billing_models import Bill, BillItem
@@ -21,7 +21,8 @@ from .billing_views import create_bill, student_bills, bill_detail
 from .forms import (
     CustomPasswordChangeForm, TeacherCreationForm, TaskForm,
     WorkSessionManualForm, WorkSessionClockForm, WorkSessionTimeRangeForm, WorkSessionFilterForm, AddTeacherForm,
-    ChangeTeacherPasswordForm, SalaryReportForm, StudentCreationForm, EditStudentForm, ChangeStudentPasswordForm
+    ChangeTeacherPasswordForm, SalaryReportForm, StudentCreationForm, EditStudentForm, ChangeStudentPasswordForm,
+    InspectorCreationForm
 )
 from .services import SalaryCalculationService
 
@@ -795,3 +796,52 @@ def view_deactivated_students(request):
         'deactivated_students': deactivated_students
     }
     return render(request, 'superuser/view_deactivated_students.html', context)
+
+
+@login_required
+@user_passes_test(lambda u: u.is_superuser)
+def manage_inspectors(request):
+    from .models import Inspector, CustomUser
+    from .forms import InspectorCreationForm
+    inspectors = Inspector.objects.select_related('user').all()
+    form = InspectorCreationForm(request.POST or None)
+    if request.method == 'POST' and form.is_valid():
+        username = form.cleaned_data['username']
+        email = form.cleaned_data['email']
+        password = form.cleaned_data['password']
+        # Create user
+        user = CustomUser.objects.create_user(username=username, email=email, password=password, is_inspector=True)
+        Inspector.objects.create(user=user)
+        messages.success(request, f'Inspector {username} created successfully.')
+        return redirect('manage_inspectors')
+    return render(request, 'superuser/manage_inspectors.html', {'form': form, 'inspectors': inspectors})
+
+@login_required
+@user_passes_test(lambda u: u.is_superuser)
+def delete_inspector(request, inspector_id):
+    from .models import Inspector
+    inspector = get_object_or_404(Inspector, id=inspector_id)
+    if request.method == 'POST':
+        username = inspector.user.username
+        inspector.user.delete()
+        messages.success(request, f'Inspector {username} deleted successfully.')
+        return redirect('manage_inspectors')
+    return render(request, 'superuser/confirm_delete.html', {'object': inspector, 'object_name': 'inspector'})
+
+@login_required
+@user_passes_test(lambda u: u.is_superuser)
+def change_inspector_password(request, inspector_id):
+    from .models import Inspector
+    inspector = get_object_or_404(Inspector, id=inspector_id)
+    from .forms import CustomPasswordChangeForm
+    if request.method == 'POST':
+        form = CustomPasswordChangeForm(inspector.user, request.POST)
+        if form.is_valid():
+            user = form.save()
+            messages.success(request, f"Password for inspector {inspector.user.username} updated successfully.")
+            return redirect('manage_inspectors')
+        else:
+            messages.error(request, 'Please correct the errors below.')
+    else:
+        form = CustomPasswordChangeForm(inspector.user)
+    return render(request, 'superuser/change_password.html', {'form': form, 'inspector': inspector})

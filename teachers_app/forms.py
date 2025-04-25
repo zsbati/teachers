@@ -335,3 +335,26 @@ class BillItemForm(forms.ModelForm):
             cleaned_data['service_price_at_billing'] = service_price
             
         return cleaned_data
+
+
+class InspectorCreationForm(forms.Form):
+    username = forms.CharField(max_length=150, widget=forms.TextInput(attrs={'class': 'form-control'}))
+    email = forms.EmailField(required=False, widget=forms.EmailInput(attrs={'class': 'form-control'}))
+    password = forms.CharField(widget=forms.PasswordInput(attrs={'class': 'form-control'}))
+    confirm_password = forms.CharField(widget=forms.PasswordInput(attrs={'class': 'form-control'}))
+
+    def clean(self):
+        cleaned_data = super().clean()
+        password = cleaned_data.get('password')
+        confirm_password = cleaned_data.get('confirm_password')
+        username = cleaned_data.get('username')
+        email = cleaned_data.get('email')
+        from .models import CustomUser
+        if password and confirm_password and password != confirm_password:
+            raise forms.ValidationError("Passwords do not match")
+        if username and CustomUser.objects.filter(username=username).exists():
+            raise forms.ValidationError("Username already exists")
+        if email:
+            if CustomUser.objects.filter(email=email).exists():
+                raise forms.ValidationError("Email already exists")
+        return cleaned_data
