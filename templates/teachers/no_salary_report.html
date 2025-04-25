@@ -2,10 +2,22 @@
 {% block title %}No Salary Report{% endblock %}
 {% block content %}
 <div class="container mt-4">
-    <div class="alert alert-warning">
-        <h4>No Salary Report</h4>
-        <p>No salary report was found for {{ month }}/{{ year }}.</p>
-        <a href="{% url 'teacher_salary_reports' %}" class="btn btn-primary mt-2">Back to My Salary Reports</a>
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-warning text-dark">
+                    <h4 class="mb-0">No Salary Report</h4>
+                </div>
+                <div class="card-body">
+                    <p class="mb-3">No salary report was found for {{ month }}/{{ year }}.</p>
+                    <a href="{% url 'teacher_salary_reports' %}" class="btn btn-primary mt-2">Back to My Salary Reports</a>
+                </div>
+            </div>
+        </div>
     </div>
 </div>
+<style>
+.card { border-radius: 10px; }
+.card-header { border-bottom: none; }
+</style>
 {% endblock %}

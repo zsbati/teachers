@@ -6,9 +6,9 @@
 
 {% block content %}
 <div class="container mt-4">
-    <div class="card">
-        <div class="card-header">
-            <h3>Confirm Task Removal</h3>
+    <div class="card shadow-sm border-0">
+        <div class="card-header bg-danger text-white">
+            <h3 class="mb-0">Confirm Task Removal</h3>
         </div>
         <div class="card-body">
             <p>Are you sure you want to remove the task "{{ task.title }}"?</p>
@@ -20,4 +20,8 @@
         </div>
     </div>
 </div>
+<style>
+.card { border-radius: 10px; }
+.card-header { border-bottom: none; }
+</style>
 {% endblock %} 
