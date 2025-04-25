@@ -496,6 +496,9 @@ def record_work(request, teacher_id=None):
                 work_session.teacher = teacher
                 work_session.entry_type = 'manual'
                 work_session.save()
+                from .billing_services import StudentBillingService
+                if work_session.student:
+                    StudentBillingService.create_bill_item_for_work_session(work_session)
                 messages.success(request, f'Work hours recorded successfully for {teacher.user.username}!')
                 return redirect('record_work_with_teacher', teacher_id=teacher.id)
         elif entry_type == 'clock':
@@ -506,6 +509,9 @@ def record_work(request, teacher_id=None):
                 work_session.entry_type = 'clock'
                 work_session.clock_in = timezone.now()
                 work_session.save()
+                from .billing_services import StudentBillingService
+                if work_session.student:
+                    StudentBillingService.create_bill_item_for_work_session(work_session)
                 messages.success(request, f'Clock-in recorded successfully for {teacher.user.username}!')
                 return redirect('record_work_with_teacher', teacher_id=teacher.id)
         elif entry_type == 'time_range':
@@ -515,6 +521,9 @@ def record_work(request, teacher_id=None):
                 work_session.teacher = teacher
                 work_session.entry_type = 'time_range'
                 work_session.save()
+                from .billing_services import StudentBillingService
+                if work_session.student:
+                    StudentBillingService.create_bill_item_for_work_session(work_session)
                 messages.success(request,
                                  f'Work hours recorded successfully with a time range for {teacher.user.username}!')
                 return redirect('record_work_with_teacher', teacher_id=teacher.id)
@@ -544,7 +553,7 @@ def record_work(request, teacher_id=None):
 
 
 @login_required
-@user_passes_test(is_teacher)
+@user_passes_test(lambda u: u.is_teacher)
 def clock_out(request, session_id):
     if request.method == 'POST':
         session = get_object_or_404(
@@ -786,6 +795,3 @@ def view_deactivated_students(request):
         'deactivated_students': deactivated_students
     }
     return render(request, 'superuser/view_deactivated_students.html', context)
-
-
-

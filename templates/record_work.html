@@ -111,7 +111,7 @@
                             <td>{{ session.task }}</td>
                             <td>{{ session.student }}</td>
                             <td>{{ session.entry_type }}</td>
-                            <td>{{ session.manual_hours|default:session.get_duration_display }}</td>
+                            <td>{{ session.calculated_hours }}</td>
                             <td>{{ session.notes|default:"" }}</td>
                         </tr>
                         {% empty %}
