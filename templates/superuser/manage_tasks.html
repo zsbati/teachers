@@ -44,53 +44,71 @@
             </div>
         </div>
 
-        <!-- Current Tasks List -->
-        <div class="col-md-8">
-            <div class="card">
-                <div class="card-header">
-                    <h5 class="mb-0">Current Tasks</h5>
+        <!-- Modernized Tasks Card/Table -->
+        <div class="container my-5">
+          <div class="row">
+            <div class="col">
+              <div class="card shadow-sm border-0">
+                <div class="card-header bg-primary text-white d-flex align-items-center">
+                  <h4 class="mb-0 flex-grow-1">Current Tasks</h4>
                 </div>
-                <div class="card-body">
-                    <div class="table-responsive">
-                        <table class="table table-hover">
-                            <thead>
-                                <tr>
-                                    <th>Name</th>
-                                    <th>Hourly Rate</th>
-                                    <th>Student Price</th>
-                                    <th>Description</th>
-                                    <th>Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% for task in tasks %}
-                                <tr>
-                                    <td>{{ task.name }}</td>
-                                    <td>${{ task.hourly_rate }}</td>
-                                    <td>${{ task.price }}</td>
-                                    <td>{{ task.description|default:"Not specified"|truncatewords:10 }}</td>
-                                    <td>
-                                        <div class="btn-group">
-                                            <a href="{% url 'edit_task' task.id %}" class="btn btn-warning">
-                                                <i class="fas fa-edit"></i> Edit
-                                            </a>
-                                            <a href="{% url 'remove_task' task.id %}" class="btn btn-danger">
-                                                <i class="fas fa-trash"></i> Remove
-                                            </a>
-                                        </div>
-                                    </td>
-                                </tr>
-                                {% empty %}
-                                <tr>
-                                    <td colspan="5" class="text-center">No tasks found.</td>
-                                </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
-                    </div>
+                <div class="card-body p-0">
+                  <div class="table-responsive">
+                    <table class="table table-hover mb-0 align-middle">
+                      <thead class="table-light">
+                        <tr>
+                          <th>Name</th>
+                          <th>Hourly Rate</th>
+                          <th>Student Price</th>
+                          <th>Description</th>
+                          <th>Actions</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {% for task in tasks %}
+                        <tr>
+                          <td>{{ task.name }}</td>
+                          <td>${{ task.hourly_rate }}</td>
+                          <td>${{ task.price }}</td>
+                          <td>{{ task.description|default:"Not specified"|truncatewords:10 }}</td>
+                          <td>
+                            <div class="btn-group btn-group-sm">
+                              <a href="{% url 'edit_task' task.id %}" class="btn btn-outline-warning"><i class="fas fa-edit"></i></a>
+                              <a href="{% url 'remove_task' task.id %}" class="btn btn-outline-danger"><i class="fas fa-trash"></i></a>
+                            </div>
+                          </td>
+                        </tr>
+                        {% empty %}
+                        <tr><td colspan="5" class="text-center">No tasks found.</td></tr>
+                        {% endfor %}
+                      </tbody>
+                    </table>
+                  </div>
                 </div>
+              </div>
             </div>
+          </div>
         </div>
+
     </div>
 </div>
+
+<style>
+body {
+  background-color: #F4F6F8;
+  font-family: 'Nunito', 'Segoe UI', Arial, sans-serif;
+}
+.card {
+  border-radius: 10px;
+}
+.card-header {
+  border-bottom: none;
+}
+.table th, .table td {
+  vertical-align: middle;
+}
+.btn-group .btn {
+  border-radius: 4px !important;
+}
+</style>
 {% endblock %}

@@ -85,44 +85,64 @@
     </div>
 </div>
 
-<!-- Recent Work Sessions Table -->
-<div class="row">
-    <div class="col-md-12">
-        <div class="card mt-4">
-            <div class="card-header">
-                <h4>Recent Work Sessions</h4>
-            </div>
-            <div class="card-body">
-                <table class="table table-striped">
-                    <thead>
-                        <tr>
-                            <th>Date</th>
-                            <th>Task</th>
-                            <th>Student</th>
-                            <th>Entry Type</th>
-                            <th>Hours</th>
-                            <th>Notes</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for session in completed_sessions|dictsortreversed:"created_at" %}
-                        <tr>
-                            <td>{{ session.created_at|date:"Y-m-d H:i" }}</td>
-                            <td>{{ session.task }}</td>
-                            <td>{{ session.student }}</td>
-                            <td>{{ session.entry_type }}</td>
-                            <td>{{ session.calculated_hours }}</td>
-                            <td>{{ session.notes|default:"" }}</td>
-                        </tr>
-                        {% empty %}
-                        <tr><td colspan="6">No recent work sessions.</td></tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
+<!-- Modernized Work Sessions Card/Table -->
+<div class="container my-5">
+  <div class="row">
+    <div class="col">
+      <div class="card shadow-sm border-0">
+        <div class="card-header bg-primary text-white d-flex align-items-center">
+          <h4 class="mb-0 flex-grow-1">Recent Work Sessions</h4>
         </div>
+        <div class="card-body p-0">
+          <div class="table-responsive">
+            <table class="table table-hover mb-0 align-middle">
+              <thead class="table-light">
+                <tr>
+                  <th>Date</th>
+                  <th>Task</th>
+                  <th>Student</th>
+                  <th>Entry Type</th>
+                  <th>Hours</th>
+                  <th>Notes</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for session in completed_sessions|dictsortreversed:"created_at" %}
+                <tr>
+                  <td>{{ session.created_at|date:"Y-m-d H:i" }}</td>
+                  <td>{{ session.task }}</td>
+                  <td>{{ session.student }}</td>
+                  <td><span class="badge bg-info text-dark">{{ session.entry_type }}</span></td>
+                  <td>{{ session.calculated_hours }}</td>
+                  <td>{{ session.notes|default:"" }}</td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="6" class="text-center">No recent work sessions.</td></tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
     </div>
+  </div>
 </div>
+
+<style>
+body {
+  background-color: #F4F6F8;
+  font-family: 'Nunito', 'Segoe UI', Arial, sans-serif;
+}
+.card {
+  border-radius: 10px;
+}
+.card-header {
+  border-bottom: none;
+}
+.table th, .table td {
+  vertical-align: middle;
+}
+</style>
 
 <script>
     (function() {
