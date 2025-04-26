@@ -84,8 +84,6 @@ flowchart TD
     GenerateBills --> Notify
     Notify --> EndBilling
     ConfirmBilling -- No --> EndBilling
-```
-
 ### 3. Salary Report Generation Flowchart
 
 ```mermaid
