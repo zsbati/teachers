@@ -276,3 +276,28 @@ def charge_student_for_service(request):
         'selected_year': selected_year,
     }
     return render(request, 'superuser/charge_student_for_service.html', context)
+
+@login_required
+@user_passes_test(lambda u: u.is_superuser)
+def edit_bill_item(request, item_id):
+    bill_item = get_object_or_404(BillItem, pk=item_id)
+    if request.method == 'POST':
+        form = BillItemForm(request.POST, instance=bill_item)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Bill item updated successfully.')
+            return redirect('student_bill_items', student_id=bill_item.bill.student.id)
+    else:
+        form = BillItemForm(instance=bill_item)
+    return render(request, 'superuser/edit_bill_item.html', {'form': form, 'bill_item': bill_item})
+
+@login_required
+@user_passes_test(lambda u: u.is_superuser)
+def delete_bill_item(request, item_id):
+    bill_item = get_object_or_404(BillItem, pk=item_id)
+    student_id = bill_item.bill.student.id
+    if request.method == 'POST':
+        bill_item.delete()
+        messages.success(request, 'Bill item deleted successfully.')
+        return redirect('student_bill_items', student_id=student_id)
+    return render(request, 'superuser/confirm_bill_item_delete.html', {'bill_item': bill_item})
