@@ -1,6 +1,6 @@
+
 {% extends 'base.html' %}
 {% load static %}
-
 
 {% block title %}Superuser Dashboard{% endblock %}
 
@@ -12,7 +12,7 @@
     <div class="card-body">
         <div class="row">
             {% if user.is_superuser %}
-            <!-- Left column: Bill All Students and future features -->
+            <!-- Left column: Bulk Actions (unchanged) -->
             <div class="col-md-4 mb-3">
                 <div class="card h-100">
                     <div class="card-header bg-primary text-white">
@@ -33,55 +33,91 @@
                 </div>
             </div>
             {% endif %}
-            <!-- Right column: Existing dashboard features -->
+            <!-- Right column: Reorganized into categories -->
             <div class="col-md-8">
+                <!-- Role info (unchanged) -->
                 <div class="card mb-3">
                     <div class="card-body">
                         <h5 class="card-title">Your Role</h5>
                         <p class="card-text">Super User</p>
                     </div>
                 </div>
-                <div class="card">
+                <!-- Billing Operations -->
+                <div class="card mb-3">
+                    <div class="card-header bg-info text-white">
+                        <i class="bi bi-cash"></i> Billing Operations
+                    </div>
                     <div class="card-body">
-                        <h5 class="card-title">Quick Actions</h5>
-                        <ul class="list-group">
-                            <li class="list-group-item">
-                                <a href="{% url 'manage_teachers' %}" class="text-decoration-none">Manage Teachers</a>
-                            </li>
-                            <li class="list-group-item">
-                                <a href="{% url 'manage_students' %}" class="text-decoration-none">Manage Students</a>
-                            </li>
-                            <li class="list-group-item">
-                                <a href="{% url 'manage_tasks' %}" class="text-decoration-none">Manage Tasks</a>
-                            </li>
-                            <li class="list-group-item">
-                                <a href="{% url 'list_salary_reports' %}" class="text-decoration-none">Salary Reports</a>
-                            </li>
+                        <div class="list-group">
                             {% if user.is_superuser %}
-                            <li class="list-group-item">
-                                <a href="{% url 'create_salary_report' %}" class="text-decoration-none">Create New Salary Report</a>
-                            </li>
+                            <a href="{% url 'select_student_for_bill_creation' %}" class="list-group-item list-group-item-action">
+                                <i class="bi bi-plus-circle"></i> Create New Bill
+                            </a>
                             {% endif %}
-                            <li class="list-group-item">
-                                <a href="{% url 'manage_services' %}" class="text-decoration-none">Manage Services</a>
-                            </li>
+                            <a href="{% url 'select_student_billing' %}" class="list-group-item list-group-item-action">
+                                <i class="bi bi-currency-dollar"></i> Manage Student Billing
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                <!-- Salary and Service Charges -->
+                <div class="card mb-3">
+                    <div class="card-header bg-success text-white">
+                        <i class="bi bi-wallet2"></i> Salary & Services
+                    </div>
+                    <div class="card-body">
+                        <div class="list-group">
+                            <a href="{% url 'list_salary_reports' %}" class="list-group-item list-group-item-action">
+                                <i class="bi bi-file-text"></i> View Salary Reports
+                            </a>
                             {% if user.is_superuser %}
-                            <li class="list-group-item">
-                                <a href="{% url 'charge_student_for_service' %}" class="text-decoration-none">Charge Student for Service</a>
-                            </li>
-                            <li class="list-group-item">
-                                <a href="{% url 'select_student_for_bill_creation' %}" class="text-decoration-none">Create New Bill</a>
-                            </li>
+                            <a href="{% url 'create_salary_report' %}" class="list-group-item list-group-item-action">
+                                <i class="bi bi-plus-circle"></i> Create Salary Report
+                            </a>
                             {% endif %}
-                            <li class="list-group-item">
-                                <a href="{% url 'select_student_billing' %}" class="text-decoration-none">Manage Student Billing</a>
-                            </li>
+                            <a href="{% url 'manage_services' %}" class="list-group-item list-group-item-action">
+                                <i class="bi bi-gear"></i> Manage Services
+                            </a>
                             {% if user.is_superuser %}
-                            <li class="list-group-item">
-                                <a href="{% url 'manage_inspectors' %}" class="text-decoration-none">Manage Inspectors</a>
-                            </li>
+                            <a href="{% url 'charge_student_for_service' %}" class="list-group-item list-group-item-action">
+                                <i class="bi bi-receipt"></i> Charge for Service
+                            </a>
                             {% endif %}
-                        </ul>
+                        </div>
+                    </div>
+                </div>
+                <!-- User Management -->
+                <div class="card mb-3">
+                    <div class="card-header bg-warning">
+                        <i class="bi bi-people"></i> User Management
+                    </div>
+                    <div class="card-body">
+                        <div class="list-group">
+                            <a href="{% url 'manage_teachers' %}" class="list-group-item list-group-item-action">
+                                <i class="bi bi-person-badge"></i> Manage Teachers
+                            </a>
+                            <a href="{% url 'manage_students' %}" class="list-group-item list-group-item-action">
+                                <i class="bi bi-mortarboard"></i> Manage Students
+                            </a>
+                            {% if user.is_superuser %}
+                            <a href="{% url 'manage_inspectors' %}" class="list-group-item list-group-item-action">
+                                <i class="bi bi-person-check"></i> Manage Inspectors
+                            </a>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                <!-- Tasks -->
+                <div class="card">
+                    <div class="card-header bg-secondary text-white">
+                        <i class="bi bi-list-task"></i> Tasks
+                    </div>
+                    <div class="card-body">
+                        <div class="list-group">
+                            <a href="{% url 'manage_tasks' %}" class="list-group-item list-group-item-action">
+                                <i class="bi bi-check-square"></i> Manage Tasks
+                            </a>
+                        </div>
                     </div>
                 </div>
             </div>
