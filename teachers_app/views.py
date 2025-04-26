@@ -53,7 +53,7 @@ def dashboard_redirect(request):
     """
     Redirects the user to the appropriate dashboard based on their role.
     """
-    if request.user.is_superuser or getattr(request.user, 'is_inspector', False):
+    if request.user.is_inspector:
         return redirect('superuser_dashboard')
     elif getattr(request.user, 'is_student', False):
         return redirect('student_dashboard')

@@ -8,7 +8,7 @@ from .services import SalaryCalculationService
 import calendar
 
 @login_required
-@user_passes_test(lambda u: u.is_superuser or getattr(u, 'is_inspector', False), login_url=None)
+@user_passes_test(lambda u: u.is_inspector, login_url=None)
 def salary_reports_bulk(request):
     """
     Bulk salary report creation/updating for all teachers for a selected month, with preview and update/skip logic.

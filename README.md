@@ -10,7 +10,7 @@ This project is a web application for managing teachers, their work records, sal
 - Record and view work logs 
 - Generate and view teacher salary reports
 - Manage student records (add, edit, remove)
-- Role-based access (teacher, superuser/admin)
+- Role-based access (teacher, superuser/admin, inspector)
 - Superusers can:
   - Open and delete student and teacher accounts
   - Create, edit, and remove taxes and services
@@ -24,6 +24,12 @@ This project is a web application for managing teachers, their work records, sal
   - **Bulk Salary Reports for All Teachers:** Create or update salary reports for all teachers for a selected month in one click, with a preview and options to update or skip existing reports. Paid reports require explicit confirmation to update. Supervisor can select any month/year.
   - **Flexible Month/Year Selection:** On both bulk billing and salary reporting, select any month and year before previewing or confirming the operation. Default is previous month, but supervisor can generate reports at any time.
   - **Dashboard Shortcuts:** Prominent buttons for both bulk billing and bulk salary reports are available in the left column of the superuser dashboard for quick access.
+- Inspectors can:
+  - View all work sessions (for any teacher)
+  - View all bills (for any student)
+  - View all salary reports (for any teacher)
+  - View all student and teacher records
+  - Inspectors **cannot** add, edit, or delete any data (read-only access)
 - Teachers can:
   - Record work sessions for themselves and view them
     - (This feature can be deactivated for some schools/tutoring centers)
