@@ -1,0 +1,85 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container mt-4">
+    <div class="card">
+        <div class="card-header">
+            <h2>Sessions and Manually Charged Services for {{ student }}</h2>
+        </div>
+        <div class="card-body">
+            <h4>Sessions</h4>
+            {% if sessions %}
+            <div class="table-responsive mb-4">
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Task</th>
+                            <th>Teacher</th>
+                            <th>Type</th>
+                            <th>Hours</th>
+                            <th>Notes</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for session in sessions %}
+                        <tr>
+                            <td>
+                                {% if session.start_time %}
+                                    {{ session.start_time|date:"Y-m-d H:i" }}
+                                {% elif session.clock_in %}
+                                    {{ session.clock_in|date:"Y-m-d H:i" }}
+                                {% elif session.created_at %}
+                                    {{ session.created_at|date:"Y-m-d H:i" }}
+                                {% else %}
+                                    -
+                                {% endif %}
+                            </td>
+                            <td>{{ session.task }}</td>
+                            <td>{{ session.teacher }}</td>
+                            <td>{{ session.entry_type }}</td>
+                            <td>{{ session.calculated_hours }}</td>
+                            <td>{{ session.notes|default:"" }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="alert alert-info">No sessions found for this student.</div>
+            {% endif %}
+
+            <h4>Manually Charged Services</h4>
+            {% if bill_items %}
+            <div class="table-responsive">
+                <table class="table table-bordered">
+                    <thead>
+                        <tr>
+                            <th>Month</th>
+                            <th>Service</th>
+                            <th>Description</th>
+                            <th>Price at Billing</th>
+                            <th>Quantity</th>
+                            <th>Amount</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in bill_items %}
+                        <tr>
+                            <td>{{ item.bill.month|date:"F Y" }}</td>
+                            <td>{{ item.service_name }}</td>
+                            <td>{{ item.service_description|default:"-" }}</td>
+                            <td>${{ item.service_price_at_billing }}</td>
+                            <td>{{ item.quantity }}</td>
+                            <td>${{ item.amount }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="alert alert-info">No manually charged services found for this student.</div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

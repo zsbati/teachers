@@ -619,7 +619,6 @@ def clock_out(request, session_id):
 
 
 @login_required
-@user_passes_test(lambda u: u.is_inspector, login_url=None)
 def recent_work_sessions(request, teacher_id=None):
     # Superusers and inspectors: must specify a teacher_id
     if request.user.is_superuser or getattr(request.user, 'is_inspector', False):
@@ -627,8 +626,13 @@ def recent_work_sessions(request, teacher_id=None):
             return HttpResponseForbidden("You must specify a teacher to view sessions for.")
         teacher = get_object_or_404(Teacher, id=teacher_id)
     # Teachers: always see their own sessions
-    else:
+    elif hasattr(request.user, 'teacher'):
         teacher = get_object_or_404(Teacher, user=request.user)
+        # Prevent teachers from viewing other teachers' sessions
+        if teacher_id is not None and teacher_id != teacher.id:
+            return HttpResponseForbidden("You do not have permission to view other teachers' sessions.")
+    else:
+        return HttpResponseForbidden("You do not have permission to view work sessions.")
 
     # Fetch recent work sessions for the teacher
     work_sessions = WorkSession.objects.filter(teacher=teacher).order_by('-created_at')[:10]
@@ -708,34 +712,23 @@ def create_salary_report(request):
 @user_passes_test(lambda u: u.is_inspector, login_url=None)
 def view_salary_report(request, teacher_id, year, month):
     teacher = get_object_or_404(Teacher, id=teacher_id)
-    
-    # Get the report for this month
-    start_date = timezone.datetime(year, month, 1)
+    from django.utils import timezone
+    from datetime import datetime, timedelta
+    # Use timezone-aware datetimes
+    start_date = timezone.make_aware(datetime(year, month, 1))
     if month == 12:
-        end_date = timezone.datetime(year + 1, 1, 1)
+        end_date = timezone.make_aware(datetime(year + 1, 1, 1))
     else:
-        end_date = timezone.datetime(year, month + 1, 1)
-    end_date = end_date - timezone.timedelta(microseconds=1)
+        end_date = timezone.make_aware(datetime(year, month + 1, 1))
+    end_date = end_date - timedelta(microseconds=1)
     
     # Get the report for this period
     reports = SalaryReport.objects.filter(
         teacher=teacher,
         start_date=start_date,
-        end_date=end_date,
-        is_deleted=False
-    ).order_by('-created_at')
-    
-    if not reports.exists():
-        # If no report exists, create a new one
-        report = SalaryReport.objects.create(
-            teacher=teacher,
-            start_date=start_date,
-            end_date=end_date,
-            created_by=request.user
-        )
-    else:
-        # If a report exists, use it
-        report = reports.first()
+        end_date=end_date
+    )
+    report = reports.first()
 
     # Calculate the report data - FIXED: Use static method
     report_data = SalaryCalculationService.calculate_salary(teacher, year, month)
