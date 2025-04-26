@@ -24,8 +24,6 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'dal',
-    'dal_select2',
     'teachers_app',
 ]
 

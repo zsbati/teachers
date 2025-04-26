@@ -145,18 +145,6 @@ body {
 </style>
 
 <script>
-    (function() {
-        if (window.__dal_ready) return;
-        window.__dal_ready = true;
-        if (typeof window.dal !== "undefined" && typeof window.dal.initialize === "function") {
-            window.dal.initialize();
-        } else {
-            document.addEventListener('dal-init-function', function() {
-                if (typeof window.dal !== "undefined" && typeof window.dal.initialize === "function") {
-                    window.dal.initialize();
-                }
-            });
-        }
-    })();
+    // DAL-related code removed as django-autocomplete-light is no longer used
 </script>
 {% endblock %}
