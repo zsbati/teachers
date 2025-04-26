@@ -153,6 +153,16 @@ def bill_detail(request, bill_id):
     })
 
 @login_required
+@user_passes_test(lambda u: u.is_inspector, login_url=None)
+def student_bill_items(request, student_id):
+    student = get_object_or_404(Student, pk=student_id)
+    bill_items = BillItem.objects.filter(bill__student=student).select_related('bill').order_by('-bill__month')
+    return render(request, 'superuser/student_bill_items.html', {
+        'student': student,
+        'bill_items': bill_items,
+    })
+
+@login_required
 @user_passes_test(lambda u: u.is_superuser)
 def bill_all_students(request):
     """Bulk billing for all students for a selected month, with preview and update/skip logic."""

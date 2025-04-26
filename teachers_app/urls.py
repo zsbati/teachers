@@ -63,6 +63,7 @@ urlpatterns = [
     path('student/<int:student_id>/bills/create/', billing_views.create_bill, name='create_bill'),
     path('bill/<int:bill_id>/', billing_views.bill_detail, name='bill_detail'),
     path('dashboard/superuser/charge-student-for-service/', billing_views.charge_student_for_service, name='charge_student_for_service'),
+    path('superuser/student/<int:student_id>/bill-items/', billing_views.student_bill_items, name='student_bill_items'),
 
     path('manage-inspectors/', views.manage_inspectors, name='manage_inspectors'),
     path('delete-inspector/<int:inspector_id>/', views.delete_inspector, name='delete_inspector'),

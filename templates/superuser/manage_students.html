@@ -74,6 +74,7 @@
                                     <a href="{% url 'change_student_password' student.id %}"
                                        class="btn btn-sm btn-info me-2">Change Password</a>
                                     <a href="{% url 'remove_student' student.id %}" class="btn btn-danger btn-sm">Deactivate</a>
+                                    <a href="{% url 'student_bill_items' student.id %}" class="btn btn-sm btn-secondary ms-2">Services/Sessions</a>
                                     {% endif %}
                                 </td>
                             </tr>
@@ -121,6 +122,7 @@
                                        class="btn btn-sm btn-success me-2">Reactivate</a>
                                     <a href="{% url 'delete_student' student.id %}"
                                        class="btn btn-sm btn-danger">Delete</a>
+                                    <a href="{% url 'student_bill_items' student.id %}" class="btn btn-sm btn-secondary ms-2">Services/Sessions</a>
                                     {% endif %}
                                 </td>
                             </tr>
