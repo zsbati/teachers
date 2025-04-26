@@ -4,6 +4,27 @@
     <div class="card">
         <div class="card-header">
             <h2>Create Bill for {{ student }}</h2>
+            <form method="get" class="row mb-3">
+              <div class="col-auto">
+                <label for="month" class="form-label">Month:</label>
+                <select name="month" id="month" class="form-select">
+                  {% for m in months %}
+                    <option value="{{ m.value }}" {% if m.value == selected_month %}selected{% endif %}>{{ m.name }}</option>
+                  {% endfor %}
+                </select>
+              </div>
+              <div class="col-auto">
+                <label for="year" class="form-label">Year:</label>
+                <select name="year" id="year" class="form-select">
+                  {% for y in years %}
+                    <option value="{{ y }}" {% if y == selected_year %}selected{% endif %}>{{ y }}</option>
+                  {% endfor %}
+                </select>
+              </div>
+              <div class="col-auto align-self-end">
+                <button type="submit" class="btn btn-primary">Go</button>
+              </div>
+            </form>
             <p class="text-muted">Billing Month: {{ current_month|date:"F Y" }}</p>
         </div>
         <div class="card-body">

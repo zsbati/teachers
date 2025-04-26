@@ -24,9 +24,7 @@
                             <a href="{% url 'bill_all_students' %}" class="btn btn-primary btn-lg w-100 mb-2">
                                 <i class="bi bi-cash-coin"></i> Bill All Students
                             </a>
-                            <a href="{% url 'select_student_for_bill_creation' %}" class="text-decoration-none">Create New Bill</a>
                             {% endif %}
-                            <a href="{% url 'select_student_billing' %}" class="text-decoration-none">Manage Student Billing</a>
                             <a href="{% url 'salary_reports_bulk' %}" class="btn btn-success btn-lg w-100">
                                 <i class="bi bi-people-fill"></i> Salary Reports for All Teachers
                             </a>
@@ -68,6 +66,9 @@
                                 <a href="{% url 'manage_services' %}" class="text-decoration-none">Manage Services</a>
                             </li>
                             {% if user.is_superuser %}
+                            <li class="list-group-item">
+                                <a href="{% url 'charge_student_for_service' %}" class="text-decoration-none">Charge Student for Service</a>
+                            </li>
                             <li class="list-group-item">
                                 <a href="{% url 'select_student_for_bill_creation' %}" class="text-decoration-none">Create New Bill</a>
                             </li>

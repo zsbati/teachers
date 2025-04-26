@@ -1,0 +1,60 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container mt-4">
+    <div class="card">
+        <div class="card-header">
+            <h2>Charge Student for Service</h2>
+        </div>
+        <div class="card-body">
+            <form method="post">
+                {% csrf_token %}
+                <div class="row mb-3">
+                    <div class="col-md-4">
+                        <label for="student" class="form-label">Student:</label>
+                        <select name="student" id="student" class="form-select">
+                            {% for s in students %}
+                                <option value="{{ s.id }}" {% if s.id == selected_student %}selected{% endif %}>{{ s }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label for="month" class="form-label">Month:</label>
+                        <select name="month" id="month" class="form-select">
+                            {% for m in months %}
+                                <option value="{{ m.value }}" {% if m.value == selected_month %}selected{% endif %}>{{ m.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <label for="year" class="form-label">Year:</label>
+                        <select name="year" id="year" class="form-select">
+                            {% for y in years %}
+                                <option value="{{ y }}" {% if y == selected_year %}selected{% endif %}>{{ y }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label for="service" class="form-label">Service:</label>
+                        <select name="service" id="service" class="form-select">
+                            {% for svc in services %}
+                                <option value="{{ svc.id }}">{{ svc.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <label for="quantity" class="form-label">Quantity:</label>
+                        <input type="number" step="0.01" min="1" name="quantity" id="quantity" class="form-control" value="1">
+                    </div>
+                    <div class="col-md-6">
+                        <label for="description" class="form-label">Description (optional):</label>
+                        <input type="text" name="description" id="description" class="form-control">
+                    </div>
+                </div>
+                <button type="submit" class="btn btn-success">Add Charge</button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
