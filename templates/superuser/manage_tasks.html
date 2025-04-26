@@ -5,8 +5,8 @@
 {% block content %}
 <div class="container mt-4">
     <div class="row">
-        <!-- Add Task Form -->
         {% if user.is_inspector %}
+        <!-- Place Add Task and Current Tasks side by side -->
         <div class="col-md-4">
             <div class="card">
                 <div class="card-header">
@@ -20,7 +20,6 @@
                             </div>
                         {% endfor %}
                     {% endif %}
-                    
                     <form method="post">
                         {% csrf_token %}
                         {% for field in form %}
@@ -44,58 +43,53 @@
                 </div>
             </div>
         </div>
+        <div class="col-md-8">
+        {% else %}
+        <div class="col-12">
         {% endif %}
-
-        <!-- Modernized Tasks Card/Table -->
-        <div class="container my-5">
-          <div class="row">
-            <div class="col">
-              <div class="card shadow-sm border-0">
+            <div class="card shadow-sm border-0 mt-0">
                 <div class="card-header bg-primary text-white d-flex align-items-center">
-                  <h4 class="mb-0 flex-grow-1">Current Tasks</h4>
+                    <h4 class="mb-0 flex-grow-1">Current Tasks</h4>
                 </div>
                 <div class="card-body p-0">
-                  <div class="table-responsive">
-                    <table class="table table-hover mb-0 align-middle">
-                      <thead class="table-light">
-                        <tr>
-                          <th>Name</th>
-                          <th>Hourly Rate</th>
-                          <th>Student Price</th>
-                          <th>Description</th>
-                          {% if user.is_inspector %}
-                          <th>Actions</th>
-                          {% endif %}
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {% for task in tasks %}
-                        <tr>
-                          <td>{{ task.name }}</td>
-                          <td>${{ task.hourly_rate }}</td>
-                          <td>${{ task.price }}</td>
-                          <td>{{ task.description|default:"Not specified"|truncatewords:10 }}</td>
-                          {% if user.is_inspector %}
-                          <td>
-                            <div class="btn-group btn-group-sm">
-                              <a href="{% url 'edit_task' task.id %}" class="btn btn-outline-warning"><i class="fas fa-edit"></i></a>
-                              <a href="{% url 'remove_task' task.id %}" class="btn btn-outline-danger"><i class="fas fa-trash"></i></a>
-                            </div>
-                          </td>
-                          {% endif %}
-                        </tr>
-                        {% empty %}
-                        <tr><td colspan="{% if user.is_inspector %}5{% else %}4{% endif %}" class="text-center">No tasks found.</td></tr>
-                        {% endfor %}
-                      </tbody>
-                    </table>
-                  </div>
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0 align-middle">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Hourly Rate</th>
+                                    <th>Student Price</th>
+                                    <th>Description</th>
+                                    {% if user.is_inspector %}
+                                    <th>Actions</th>
+                                    {% endif %}
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for task in tasks %}
+                                <tr>
+                                    <td>{{ task.name }}</td>
+                                    <td>${{ task.hourly_rate }}</td>
+                                    <td>${{ task.price }}</td>
+                                    <td>{{ task.description|default:"Not specified"|truncatewords:10 }}</td>
+                                    {% if user.is_inspector %}
+                                    <td>
+                                        <div class="btn-group btn-group-sm">
+                                            <a href="{% url 'edit_task' task.id %}" class="btn btn-warning text-white" title="Edit"><i class="fas fa-edit"></i> Edit</a>
+                                            <a href="{% url 'remove_task' task.id %}" class="btn btn-danger" title="Delete"><i class="fas fa-trash"></i> Delete</a>
+                                        </div>
+                                    </td>
+                                    {% endif %}
+                                </tr>
+                                {% empty %}
+                                <tr><td colspan="{% if user.is_inspector %}5{% else %}4{% endif %}" class="text-center">No tasks found.</td></tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
-              </div>
             </div>
-          </div>
         </div>
-
     </div>
 </div>
 
@@ -115,6 +109,18 @@ body {
 }
 .btn-group .btn {
   border-radius: 4px !important;
+}
+.btn-warning {
+  background-color: #ffc107;
+  border-color: #ffc107;
+}
+.btn-warning.text-white {
+  color: #fff !important;
+}
+.btn-danger {
+  background-color: #dc3545;
+  border-color: #dc3545;
+  color: #fff !important;
 }
 </style>
 {% endblock %}
