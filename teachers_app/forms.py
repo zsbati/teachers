@@ -336,6 +336,19 @@ class BillItemForm(forms.ModelForm):
             
         return cleaned_data
 
+    def save(self, commit=True):
+        instance = super().save(commit=False)
+        service = self.cleaned_data.get('service')
+        quantity = self.cleaned_data.get('quantity')
+        if service and quantity:
+            instance.service_price_at_billing = service.price
+            instance.amount = service.price * quantity
+            instance.service_name = service.name
+            instance.service_description = service.description or ''
+        if commit:
+            instance.save()
+        return instance
+
 
 class InspectorCreationForm(forms.Form):
     username = forms.CharField(max_length=150, widget=forms.TextInput(attrs={'class': 'form-control'}))
