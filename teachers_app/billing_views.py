@@ -229,16 +229,17 @@ def charge_student_for_service(request):
     months = [{'value': i, 'name': calendar.month_name[i]} for i in range(1, 13)]
     years = list(range(now.year - 5, now.year + 2))
 
-    selected_student = int(request.POST.get('student', students.first().id if students else 0)) if request.method == 'POST' else int(request.GET.get('student', students.first().id if students else 0))
+    # No default for student/service; default for month/year only
+    selected_student = int(request.POST.get('student')) if request.method == 'POST' and request.POST.get('student') else None
+    selected_service = int(request.POST.get('service')) if request.method == 'POST' and request.POST.get('service') else None
     selected_month = int(request.POST.get('month', now.month)) if request.method == 'POST' else int(request.GET.get('month', now.month))
     selected_year = int(request.POST.get('year', now.year)) if request.method == 'POST' else int(request.GET.get('year', now.year))
 
-    if request.method == 'POST':
-        service_id = int(request.POST.get('service'))
-        quantity = Decimal(request.POST.get('quantity', '1'))
+    if request.method == 'POST' and selected_student and selected_service:
+        student = get_object_or_404(Student, id=selected_student)
+        service = get_object_or_404(Service, id=selected_service)
+        quantity = request.POST.get('quantity', 1)
         description = request.POST.get('description', '')
-        student = Student.objects.get(id=selected_student)
-        service = Service.objects.get(id=service_id)
         period = datetime(selected_year, selected_month, 1, tzinfo=now.tzinfo)
         bill, _ = Bill.objects.get_or_create(student=student, month=period, defaults={'total_amount': 0})
         BillItem.objects.create(
@@ -260,6 +261,7 @@ def charge_student_for_service(request):
         'months': months,
         'years': years,
         'selected_student': selected_student,
+        'selected_service': selected_service,
         'selected_month': selected_month,
         'selected_year': selected_year,
     }

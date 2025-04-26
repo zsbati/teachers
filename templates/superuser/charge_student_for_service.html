@@ -12,6 +12,7 @@
                     <div class="col-md-4">
                         <label for="student" class="form-label">Student:</label>
                         <select name="student" id="student" class="form-select">
+                            <option value="">---------</option>
                             {% for s in students %}
                                 <option value="{{ s.id }}" {% if s.id == selected_student %}selected{% endif %}>{{ s }}</option>
                             {% endfor %}
@@ -36,8 +37,9 @@
                     <div class="col-md-3">
                         <label for="service" class="form-label">Service:</label>
                         <select name="service" id="service" class="form-select">
+                            <option value="">---------</option>
                             {% for svc in services %}
-                                <option value="{{ svc.id }}">{{ svc.name }}</option>
+                                <option value="{{ svc.id }}" {% if svc.id == selected_service %}selected{% endif %}>{{ svc.name }}</option>
                             {% endfor %}
                         </select>
                     </div>
