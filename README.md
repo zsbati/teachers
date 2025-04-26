@@ -76,8 +76,13 @@ flowchart TD
     Notify[Notify Students]
     EndBilling[End]
 
-    StartBilling --> SelectMonth --> ChooseStudent --> PreviewBills --> ConfirmBilling
-    ConfirmBilling -- Yes --> GenerateBills --> Notify --> EndBilling
+    StartBilling --> SelectMonth
+    SelectMonth --> ChooseStudent
+    ChooseStudent --> PreviewBills
+    PreviewBills --> ConfirmBilling
+    ConfirmBilling -- Yes --> GenerateBills
+    GenerateBills --> Notify
+    Notify --> EndBilling
     ConfirmBilling -- No --> EndBilling
 ```
 
@@ -94,8 +99,13 @@ flowchart TD
     NotifyTeachers[Notify Teachers]
     EndSalary[End]
 
-    StartSalary --> SelectPeriod --> ChooseTeacher --> PreviewReports --> ConfirmReports
-    ConfirmReports -- Yes --> GenerateReports --> NotifyTeachers --> EndSalary
+    StartSalary --> SelectPeriod
+    SelectPeriod --> ChooseTeacher
+    ChooseTeacher --> PreviewReports
+    PreviewReports --> ConfirmReports
+    ConfirmReports -- Yes --> GenerateReports
+    GenerateReports --> NotifyTeachers
+    NotifyTeachers --> EndSalary
     ConfirmReports -- No --> EndSalary
 ```
 
