@@ -67,14 +67,14 @@ flowchart TD
 
 ```mermaid
 flowchart TD
-    StartBilling([Start Billing Process])
+    StartBilling[Start Billing Process]
     SelectMonth[Select Month/Year]
     ChooseStudent[Choose Student(s)]
     PreviewBills[Preview Bills]
-    ConfirmBilling[Confirm Billing]
+    ConfirmBilling{Confirm Billing}
     GenerateBills[Generate Bills]
     Notify[Notify Students]
-    EndBilling([End])
+    EndBilling[End]
 
     StartBilling --> SelectMonth --> ChooseStudent --> PreviewBills --> ConfirmBilling
     ConfirmBilling -- Yes --> GenerateBills --> Notify --> EndBilling
@@ -85,14 +85,14 @@ flowchart TD
 
 ```mermaid
 flowchart TD
-    StartSalary([Start Salary Report Generation])
+    StartSalary[Start Salary Report Generation]
     SelectPeriod[Select Month/Year]
     ChooseTeacher[Choose Teacher(s)]
     PreviewReports[Preview Reports]
-    ConfirmReports[Confirm Generation]
+    ConfirmReports{Confirm Generation}
     GenerateReports[Generate Salary Reports]
     NotifyTeachers[Notify Teachers]
-    EndSalary([End])
+    EndSalary[End]
 
     StartSalary --> SelectPeriod --> ChooseTeacher --> PreviewReports --> ConfirmReports
     ConfirmReports -- Yes --> GenerateReports --> NotifyTeachers --> EndSalary
