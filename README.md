@@ -69,7 +69,7 @@ flowchart TD
 flowchart TD
     StartBilling[Start Billing Process]
     SelectMonth[Select Month/Year]
-    ChooseStudent[Choose Student(s)]
+    ChooseStudent[Choose Student]
     PreviewBills[Preview Bills]
     ConfirmBilling{Confirm Billing}
     GenerateBills[Generate Bills]
@@ -92,7 +92,7 @@ flowchart TD
 flowchart TD
     StartSalary[Start Salary Report Generation]
     SelectPeriod[Select Month/Year]
-    ChooseTeacher[Choose Teacher(s)]
+    ChooseTeacher[Choose Teacher]
     PreviewReports[Preview Reports]
     ConfirmReports{Confirm Generation}
     GenerateReports[Generate Salary Reports]
