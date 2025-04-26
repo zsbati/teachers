@@ -38,6 +38,67 @@ This project is a web application for managing teachers, their work records, sal
   - View their own bills
   - Edit their own contact information (telephone, email)
 
+## Flowcharts & Visual Guides
+
+### 1. User Roles & Permissions
+
+```mermaid
+flowchart TD
+    A[Superuser] -- Can View & Edit --> B[Work Sessions]
+    A -- Can View & Edit --> C[Bills]
+    A -- Can View & Edit --> D[Salary Reports]
+    A -- Can View & Edit --> E[Students]
+    A -- Can View & Edit --> F[Teachers]
+    
+    G[Inspector] -- Can View Only --> B
+    G -- Can View Only --> C
+    G -- Can View Only --> D
+    G -- Can View Only --> E
+    G -- Can View Only --> F
+    
+    H[Teacher] -- Can View & Record Own --> B
+    H -- Can View Own --> D
+    
+    I[Student] -- Can View Own --> C
+    I -- Can Edit Own Contact --> E
+```
+
+### 2. Billing Process Flowchart
+
+```mermaid
+flowchart TD
+    StartBilling([Start Billing Process])
+    SelectMonth[Select Month/Year]
+    ChooseStudent[Choose Student(s)]
+    PreviewBills[Preview Bills]
+    ConfirmBilling[Confirm Billing]
+    GenerateBills[Generate Bills]
+    Notify[Notify Students]
+    EndBilling([End])
+
+    StartBilling --> SelectMonth --> ChooseStudent --> PreviewBills --> ConfirmBilling
+    ConfirmBilling -- Yes --> GenerateBills --> Notify --> EndBilling
+    ConfirmBilling -- No --> EndBilling
+```
+
+### 3. Salary Report Generation Flowchart
+
+```mermaid
+flowchart TD
+    StartSalary([Start Salary Report Generation])
+    SelectPeriod[Select Month/Year]
+    ChooseTeacher[Choose Teacher(s)]
+    PreviewReports[Preview Reports]
+    ConfirmReports[Confirm Generation]
+    GenerateReports[Generate Salary Reports]
+    NotifyTeachers[Notify Teachers]
+    EndSalary([End])
+
+    StartSalary --> SelectPeriod --> ChooseTeacher --> PreviewReports --> ConfirmReports
+    ConfirmReports -- Yes --> GenerateReports --> NotifyTeachers --> EndSalary
+    ConfirmReports -- No --> EndSalary
+```
+
 ## Tech Stack
 
 - **Backend:** Python (Django)
