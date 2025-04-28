@@ -337,7 +337,7 @@ def delete_student(request, student_id):
         username = student.user.username
         student.user.delete()  # This will cascade delete the Student profile as well
         messages.success(request, f'Student {username} permanently deleted.')
-        return redirect('view_deactivated_students')
+        return redirect('manage_students')
     # GET: render confirmation page
     return render(request, 'superuser/confirm_student_delete.html', {'student': student})
 

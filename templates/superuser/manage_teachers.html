@@ -15,13 +15,7 @@
                     <h5 class="mb-0">Add New Teacher</h5>
                 </div>
                 <div class="card-body">
-                    {% if messages %}
-                    {% for message in messages %}
-                    <div class="alert alert-{{ message.tags }}">
-                        {{ message }}
-                    </div>
-                    {% endfor %}
-                    {% endif %}
+                    {# Remove duplicate messages display here, since base.html already renders messages #}
 
                     <form method="post">
                         {% csrf_token %}

@@ -3,6 +3,14 @@
 
 {% block content %}
 <div class="container mt-4">
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags }}">
+                {{ message }}
+            </div>
+        {% endfor %}
+    {% endif %}
+
     <div class="row">
         <!-- Add Student Form -->
         {% if user.is_inspector %}
@@ -12,14 +20,6 @@
                     <h5 class="mb-0">Add New Student</h5>
                 </div>
                 <div class="card-body">
-                    {% if messages %}
-                    {% for message in messages %}
-                    <div class="alert alert-{{ message.tags }}">
-                        {{ message }}
-                    </div>
-                    {% endfor %}
-                    {% endif %}
-
                     <form method="post">
                         {% csrf_token %}
                         {% for field in form %}
