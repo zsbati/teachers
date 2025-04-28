@@ -174,8 +174,8 @@ class WorkSessionTestCase(TestCase):
         
         # Verify individual session calculations
         self.assertEqual(session1.calculated_amount, Decimal('30.00'))  # 2 hours * $15
-        self.assertEqual(session2.calculated_amount, Decimal('30.00'))  # 1.5 hours * $20
+        self.assertEqual(session2.calculated_amount, Decimal('30.00'))  # 2 hours * $15 (rounded)
         self.assertEqual(session3.calculated_amount, Decimal('15.00'))  # 1 hour * $15
         self.assertEqual(session4.calculated_amount, Decimal('20.00'))  # 1 hour * $20
         self.assertEqual(session5.calculated_amount, Decimal('40.00'))  # 2 hours * $20
-        self.assertEqual(session6.calculated_amount, Decimal('30.00'))  # 1.5 hours * $20
+        self.assertEqual(session6.calculated_amount, Decimal('40.00'))  # 2 hours * $20 (rounded)

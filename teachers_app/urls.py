@@ -45,7 +45,7 @@ urlpatterns = [
     # Salary Report URLs
     path('superuser/salary-reports/', views.list_salary_reports, name='list_salary_reports'),
     path('superuser/salary-reports/<int:teacher_id>/', views.list_salary_reports, name='list_salary_reports'),
-    path('superuser/salary-reports/create/', views.create_salary_report, name='create_salary_report'),
+    path('superuser/salary-reports/create/', salary_views.create_salary_report, name='create_salary_report'),
     path('superuser/salary-reports/<int:teacher_id>/<int:year>/<int:month>/', views.view_salary_report,
          name='view_salary_report'),
     path('superuser/salary-reports/<int:report_id>/delete/', views.delete_salary_report, name='delete_salary_report'),

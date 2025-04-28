@@ -15,6 +15,9 @@ class CustomUser(AbstractUser):
     is_inspector = models.BooleanField(default=False)
     #  is_superuser = models.BooleanField(default=False)
 
+    @property
+    def is_inspector_effective(self):
+        return self.is_superuser or self.is_inspector
 
 # Teacher Model (simplified - only user association)
 class Teacher(models.Model):

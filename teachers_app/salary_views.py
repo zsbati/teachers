@@ -74,3 +74,44 @@ def salary_reports_bulk(request):
         'month_name': calendar.month_name[month],
         'months': months,
     })
+
+@login_required
+@user_passes_test(lambda u: u.is_inspector, login_url=None)
+def create_salary_report(request):
+    if request.method == 'POST':
+        form = SalaryReportForm(request.POST)
+        if form.is_valid():
+            teacher = form.cleaned_data['teacher']
+            year = form.cleaned_data['year']
+            month = int(form.cleaned_data['month'])
+            notes = form.cleaned_data['notes']
+
+            # Create start and end dates for the month
+            start_date = timezone.datetime(year, month, 1)
+            if month == 12:
+                end_date = timezone.datetime(year + 1, 1, 1)
+            else:
+                end_date = timezone.datetime(year, month + 1, 1)
+            end_date = end_date - timezone.timedelta(microseconds=1)
+
+            # Create the report
+            report = SalaryReport.objects.create(
+                teacher=teacher,
+                start_date=start_date,
+                end_date=end_date,
+                created_by=request.user,
+                notes=notes
+            )
+            report_data = SalaryCalculationService.calculate_salary(teacher, year, month)
+            
+            # Since we're always creating a new report, we don't need to check if it was created
+            message = f'Salary report created for {teacher.user.username} - {report_data["period"]}'
+            messages.success(request, message)
+            
+            return redirect('view_salary_report', teacher_id=teacher.id, year=year, month=month)
+    else:
+        form = SalaryReportForm()
+
+    return render(request, 'superuser/create_salary_report.html', {
+        'form': form
+    })

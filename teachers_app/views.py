@@ -667,49 +667,7 @@ def change_teacher_password(request, teacher_id):
 
 
 @login_required
-@user_passes_test(lambda u: u.is_inspector, login_url=None)
-def create_salary_report(request):
-    if request.method == 'POST':
-        form = SalaryReportForm(request.POST)
-        if form.is_valid():
-            teacher = form.cleaned_data['teacher']
-            year = form.cleaned_data['year']
-            month = int(form.cleaned_data['month'])
-            notes = form.cleaned_data['notes']
-
-            # Create start and end dates for the month
-            start_date = timezone.datetime(year, month, 1)
-            if month == 12:
-                end_date = timezone.datetime(year + 1, 1, 1)
-            else:
-                end_date = timezone.datetime(year, month + 1, 1)
-            end_date = end_date - timezone.timedelta(microseconds=1)
-
-            # Create the report
-            report = SalaryReport.objects.create(
-                teacher=teacher,
-                start_date=start_date,
-                end_date=end_date,
-                created_by=request.user,
-                notes=notes
-            )
-            report_data = SalaryCalculationService.calculate_salary(teacher, year, month)
-            
-            # Since we're always creating a new report, we don't need to check if it was created
-            message = f'Salary report created for {teacher.user.username} - {report_data["period"]}'
-            messages.success(request, message)
-            
-            return redirect('view_salary_report', teacher_id=teacher.id, year=year, month=month)
-    else:
-        form = SalaryReportForm()
-
-    return render(request, 'superuser/create_salary_report.html', {
-        'form': form
-    })
-
-
-@login_required
-@user_passes_test(lambda u: u.is_inspector, login_url=None)
+@user_passes_test(lambda u: u.is_inspector_effective or (hasattr(u, 'teacher') and u.is_authenticated), login_url=None)
 def view_salary_report(request, teacher_id, year, month):
     teacher = get_object_or_404(Teacher, id=teacher_id)
     from django.utils import timezone
@@ -721,35 +679,51 @@ def view_salary_report(request, teacher_id, year, month):
     else:
         end_date = timezone.make_aware(datetime(year, month + 1, 1))
     end_date = end_date - timedelta(microseconds=1)
-    
-    # Get the report for this period
+
     reports = SalaryReport.objects.filter(
         teacher=teacher,
-        start_date=start_date,
-        end_date=end_date
+        start_date__gte=start_date,
+        end_date__lte=end_date
     )
     report = reports.first()
 
     # Calculate the report data - FIXED: Use static method
     report_data = SalaryCalculationService.calculate_salary(teacher, year, month)
 
-    # Check permissions
-    if request.user.is_inspector:
+    # Permissions: allow inspector, superuser, or the teacher themselves
+    if request.user.is_inspector_effective:
         template = 'superuser/view_salary_report.html'
     elif request.user == teacher.user:
         template = 'teachers/view_salary_report.html'
     else:
         raise PermissionDenied("You do not have permission to view this report")
 
+    # Task summary for this report: total hours per task (only for sessions in this report)
+    from collections import defaultdict
+    task_summary_dict = defaultdict(float)
+    if report:
+        work_sessions = report.get_work_sessions().order_by('-created_at')
+    else:
+        work_sessions = WorkSession.objects.filter(teacher=teacher, start_time__gte=start_date, start_time__lte=end_date).order_by('-created_at')
+    for ws in work_sessions:
+        task_name = ws.task.name
+        task_summary_dict[task_name] += float(ws.stored_hours or 0)
+    task_summary = [
+        {'task_name': name, 'total_hours': hours}
+        for name, hours in task_summary_dict.items()
+    ]
+
     return render(request, template, {
         'teacher': teacher,
         'report': report,
-        'report_data': report_data
+        'report_data': report_data,
+        'work_sessions': work_sessions,
+        'task_summary': task_summary,
     })
 
 
 @login_required
-@user_passes_test(lambda u: u.is_inspector, login_url=None)
+@user_passes_test(lambda u: u.is_inspector_effective, login_url=None)
 def list_salary_reports(request, teacher_id=None):
     if teacher_id:
         teacher = get_object_or_404(Teacher, id=teacher_id)
@@ -858,10 +832,10 @@ def delete_inspector(request, inspector_id):
 @user_passes_test(lambda u: u.is_superuser)
 def change_inspector_password(request, inspector_id):
     from .models import Inspector
+    from django.contrib.auth.forms import SetPasswordForm
     inspector = get_object_or_404(Inspector, id=inspector_id)
-    from .forms import CustomPasswordChangeForm
     if request.method == 'POST':
-        form = CustomPasswordChangeForm(inspector.user, request.POST)
+        form = SetPasswordForm(inspector.user, request.POST)
         if form.is_valid():
             user = form.save()
             messages.success(request, f"Password for inspector {inspector.user.username} updated successfully.")
@@ -869,5 +843,38 @@ def change_inspector_password(request, inspector_id):
         else:
             messages.error(request, 'Please correct the errors below.')
     else:
-        form = CustomPasswordChangeForm(inspector.user)
+        form = SetPasswordForm(inspector.user)
     return render(request, 'superuser/change_password.html', {'form': form, 'inspector': inspector})
+
+# Removed create_salary_report from this file because it belongs in salary_views.py
+
+@login_required
+@user_passes_test(lambda u: u.is_inspector_effective, login_url=None)
+def list_salary_reports(request, teacher_id=None):
+    if teacher_id:
+        teacher = get_object_or_404(Teacher, id=teacher_id)
+        reports = SalaryReport.objects.filter(
+            teacher=teacher,
+            is_deleted=False
+        ).order_by('-start_date')
+    else:
+        teacher = None
+        reports = SalaryReport.objects.filter(
+            is_deleted=False
+        ).order_by('-start_date')
+
+    # For each report, calculate the salary - FIXED: Use static method
+    reports_with_data = []
+    for report in reports:
+        year = report.start_date.year
+        month = report.start_date.month
+        report_data = SalaryCalculationService.calculate_salary(report.teacher, year, month)
+        reports_with_data.append({
+            'report': report,
+            'total_salary': report_data['total_salary']
+        })
+
+    return render(request, 'superuser/list_salary_reports.html', {
+        'teacher': teacher,
+        'reports': reports_with_data
+    })

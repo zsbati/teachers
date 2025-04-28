@@ -125,6 +125,9 @@ class RolePermissionsTest(TestCase):
             hourly_rate=Decimal('20.00'),
             created_at=session_date
         )
+        # Ensure created_at is within the report month
+        work_session.created_at = session_date
+        work_session.save(update_fields=["created_at"])
         # Create a salary report for January 2024
         report = SalaryReport.create_for_month(
             teacher=teacher,
@@ -154,3 +157,163 @@ class RolePermissionsTest(TestCase):
             notes='Test report 2'
         )
         self.assertEqual(new_report.total_amount, Decimal('500.00'))
+
+    def test_superuser_can_edit_and_delete_everything(self):
+        self.client.login(username='admin', password='pass')
+        # Create work session, service, class, bill, bill item, student
+        work_session = WorkSession.objects.create(
+            teacher=self.teacher_obj,
+            task=self.task,
+            entry_type='manual',
+            manual_hours=Decimal('1.0'),
+            stored_hours=Decimal('1.0'),
+            hourly_rate=Decimal('20.00')
+        )
+        service = Service.objects.create(name='Science', price=Decimal('30.00'), is_active=True)
+        # Edit work session
+        url = reverse('edit_work_session', args=[work_session.id])
+        resp = self.client.get(url)
+        self.assertEqual(resp.status_code, 200)
+        # Delete work session
+        url = reverse('delete_work_session', args=[work_session.id])
+        resp = self.client.post(url)
+        self.assertIn(resp.status_code, [200, 302])
+        # Edit service
+        url = reverse('edit_service', args=[service.id])
+        resp = self.client.get(url)
+        self.assertEqual(resp.status_code, 200)
+        # Delete service
+        url = reverse('delete_service', args=[service.id])
+        resp = self.client.post(url)
+        self.assertIn(resp.status_code, [200, 302])
+
+    def test_teacher_cannot_edit_or_delete_others_or_services(self):
+        self.client.login(username='teacher', password='pass')
+        # Try to edit/delete a service
+        url = reverse('edit_service', args=[self.service.id])
+        resp = self.client.get(url)
+        self.assertNotEqual(resp.status_code, 200)
+        url = reverse('delete_service', args=[self.service.id])
+        resp = self.client.post(url)
+        self.assertNotEqual(resp.status_code, 200)
+        # Try to edit/delete other's work session
+        other_teacher = Teacher.objects.create(user=User.objects.create_user('other', 'other@example.com', 'pass'))
+        work_session = WorkSession.objects.create(
+            teacher=other_teacher,
+            task=self.task,
+            entry_type='manual',
+            manual_hours=Decimal('1.0'),
+            stored_hours=Decimal('1.0'),
+            hourly_rate=Decimal('20.00')
+        )
+        url = reverse('edit_work_session', args=[work_session.id])
+        resp = self.client.get(url)
+        self.assertNotEqual(resp.status_code, 200)
+        url = reverse('delete_work_session', args=[work_session.id])
+        resp = self.client.post(url)
+        self.assertNotEqual(resp.status_code, 200)
+
+    def test_teacher_can_add_and_view_own_work_sessions(self):
+        self.client.login(username='teacher', password='pass')
+        # Add a work session
+        url = reverse('record_work')
+        resp = self.client.post(url, {
+            'teacher': self.teacher_obj.id,
+            'task': self.task.id,
+            'entry_type': 'manual',
+            'manual_hours': '1.5',
+        })
+        self.assertIn(resp.status_code, [200, 302])
+        # View own work sessions
+        url = reverse('recent_work_sessions', args=[self.teacher_obj.id])
+        resp = self.client.get(url)
+        self.assertEqual(resp.status_code, 200)
+
+    def test_student_can_edit_own_info_and_view_bills(self):
+        self.client.login(username='student', password='pass')
+        # Edit own info
+        url = reverse('edit_student', args=[self.student.id])
+        resp = self.client.post(url, {'phone': '456'})
+        self.assertIn(resp.status_code, [200, 302])
+        # View own bills
+        url = reverse('student_bills', args=[self.student.id])
+        resp = self.client.get(url)
+        self.assertEqual(resp.status_code, 200)
+
+    def test_student_cannot_edit_others_info_or_work_sessions(self):
+        self.client.login(username='student', password='pass')
+        # Try to edit other student
+        other_student = Student.objects.create(user=User.objects.create_user('stud2', 'stud2@example.com', 'pass'), phone='789')
+        url = reverse('edit_student', args=[other_student.id])
+        resp = self.client.post(url, {'phone': '000'})
+        self.assertNotEqual(resp.status_code, 200)
+        # Try to edit work session
+        ws = WorkSession.objects.create(
+            teacher=self.teacher_obj,
+            task=self.task,
+            entry_type='manual',
+            manual_hours=Decimal('1.0'),
+            stored_hours=Decimal('1.0'),
+            hourly_rate=Decimal('20.00')
+        )
+        url = reverse('edit_work_session', args=[ws.id])
+        resp = self.client.get(url)
+        self.assertNotEqual(resp.status_code, 200)
+
+    def test_inspector_cannot_edit_or_delete_anything(self):
+        self.client.login(username='inspector', password='pass')
+        # Try to edit service
+        url = reverse('edit_service', args=[self.service.id])
+        resp = self.client.get(url)
+        self.assertNotEqual(resp.status_code, 200)
+        # Try to delete service
+        url = reverse('delete_service', args=[self.service.id])
+        resp = self.client.post(url)
+        self.assertNotEqual(resp.status_code, 200)
+        # Try to edit/delete work session
+        ws = WorkSession.objects.create(
+            teacher=self.teacher_obj,
+            task=self.task,
+            entry_type='manual',
+            manual_hours=Decimal('1.0'),
+            stored_hours=Decimal('1.0'),
+            hourly_rate=Decimal('20.00')
+        )
+        url = reverse('edit_work_session', args=[ws.id])
+        resp = self.client.get(url)
+        self.assertNotEqual(resp.status_code, 200)
+        url = reverse('delete_work_session', args=[ws.id])
+        resp = self.client.post(url)
+        self.assertNotEqual(resp.status_code, 200)
+
+    def test_negative_and_invalid_work_session_data(self):
+        self.client.login(username='teacher', password='pass')
+        url = reverse('record_work')
+        # Negative hours
+        resp = self.client.post(url, {
+            'teacher': self.teacher_obj.id,
+            'task': self.task.id,
+            'entry_type': 'manual',
+            'manual_hours': '-2',
+        })
+        self.assertContains(resp, "Manual hours cannot be negative")
+        # Missing required fields
+        resp = self.client.post(url, {
+            'teacher': self.teacher_obj.id,
+            'task': self.task.id,
+            'entry_type': 'manual',
+        })
+        self.assertContains(resp, "Manual entry type requires manual_hours")
+
+    def test_bill_edge_cases(self):
+        self.client.login(username='admin', password='pass')
+        # Zero amount
+        bill = Bill.objects.create(student=self.student, month='2024-01-01', total_amount=0)
+        bill_item = BillItem.objects.create(bill=bill, service_name='Math', service_description='', service_price_at_billing=Decimal('0.00'), quantity=1, amount=Decimal('0.00'))
+        self.assertEqual(bill_item.amount, Decimal('0.00'))
+        # Negative amount
+        bill_item2 = BillItem.objects.create(bill=bill, service_name='Math', service_description='', service_price_at_billing=Decimal('-10.00'), quantity=1, amount=Decimal('-10.00'))
+        self.assertEqual(bill_item2.amount, Decimal('-10.00'))
+        # Very large amount
+        bill_item3 = BillItem.objects.create(bill=bill, service_name='Math', service_description='', service_price_at_billing=Decimal('1000000.00'), quantity=1000, amount=Decimal('1000000000.00'))
+        self.assertEqual(bill_item3.amount, Decimal('1000000000.00'))
