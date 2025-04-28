@@ -68,9 +68,9 @@
                             <td>{{ item.bill.month|date:"F Y" }}</td>
                             <td>{{ item.service_name }}</td>
                             <td>{{ item.service_description|default:"-" }}</td>
-                            <td>${{ item.service_price_at_billing }}</td>
+                            <td>${{ item.service_price_at_billing|floatformat:2 }}</td>
                             <td>{{ item.quantity }}</td>
-                            <td>${{ item.amount }}</td>
+                            <td>${{ item.amount|floatformat:2 }}</td>
                         </tr>
                         {% endfor %}
                     </tbody>

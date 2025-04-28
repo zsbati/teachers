@@ -55,7 +55,7 @@
                             <tr>
                                 <th>Username</th>
                                 <th>Subjects</th>
-                                <th>Actions</th>
+                                <th class="align-top">Actions</th>
                             </tr>
                             </thead>
                             <tbody>
@@ -63,7 +63,7 @@
                             <tr>
                                 <td>{{ teacher.user.username }}</td>
                                 <td>{{ teacher.subjects|default:"Not specified" }}</td>
-                                <td>
+                                <td class="align-top">
                                     <div class="btn-group">
                                         {% if user.is_superuser %}
                                         <a href="{% url 'change_teacher_password' teacher.id %}"
