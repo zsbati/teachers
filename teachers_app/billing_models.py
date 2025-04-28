@@ -25,9 +25,9 @@ class BillItem(models.Model):
     bill = models.ForeignKey(Bill, on_delete=models.CASCADE, related_name='items')
     service_name = models.CharField(max_length=200)
     service_description = models.TextField(blank=True)
-    service_price_at_billing = models.DecimalField(max_digits=10, decimal_places=2)
-    quantity = models.DecimalField(max_digits=10, decimal_places=2)
-    amount = models.DecimalField(max_digits=10, decimal_places=2)
+    service_price_at_billing = models.DecimalField(max_digits=20, decimal_places=4)
+    quantity = models.DecimalField(max_digits=20, decimal_places=4)
+    amount = models.DecimalField(max_digits=20, decimal_places=4)
     
     def __str__(self):
         return f"{self.service_name} - ${self.amount}"

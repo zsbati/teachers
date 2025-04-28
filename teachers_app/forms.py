@@ -88,7 +88,7 @@ class WorkSessionManualForm(forms.ModelForm):
         manual_hours = cleaned_data.get('manual_hours')
         # Accept 0 as a valid value, but not None or empty
         if manual_hours in (None, ''):
-            raise forms.ValidationError('Manual hours are required')
+            raise forms.ValidationError('Manual entry type requires manual_hours')
         try:
             if float(manual_hours) < 0:
                 raise forms.ValidationError('Manual hours cannot be negative')
