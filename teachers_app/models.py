@@ -93,7 +93,7 @@ class WorkSession(models.Model):
 
         # Store hours based on entry type
         if self.entry_type == 'manual':
-            if self.manual_hours:
+            if self.manual_hours is not None:
                 self.stored_hours = self.manual_hours
             else:
                 raise ValueError("Manual entry type requires manual_hours")
@@ -114,8 +114,10 @@ class WorkSession(models.Model):
                 raise ValueError("Time range entry type requires start_time and end_time")
         
         # Calculate total amount using stored values
-        if self.stored_hours and self.hourly_rate:
+        if self.stored_hours is not None and self.hourly_rate is not None:
             self.total_amount = self.stored_hours * self.hourly_rate
+        else:
+            self.total_amount = 0
         
         super().save(*args, **kwargs)
 

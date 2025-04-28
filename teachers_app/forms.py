@@ -80,8 +80,22 @@ class WorkSessionManualForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.fields['manual_hours'].label = 'Hours Worked'
-        self.fields['student'].queryset = Student.objects.all()  # <--- THIS LINE
+        self.fields['student'].queryset = Student.objects.all()  
         print("Student widget in WorkSessionManualForm:", type(self.fields['student'].widget))
+
+    def clean(self):
+        cleaned_data = super().clean()
+        manual_hours = cleaned_data.get('manual_hours')
+        # Accept 0 as a valid value, but not None or empty
+        if manual_hours in (None, ''):
+            raise forms.ValidationError('Manual hours are required')
+        try:
+            if float(manual_hours) < 0:
+                raise forms.ValidationError('Manual hours cannot be negative')
+        except (TypeError, ValueError):
+            raise forms.ValidationError('Manual hours must be a number')
+        return cleaned_data
+
 
 class WorkSessionClockForm(forms.ModelForm):
     class Meta:
