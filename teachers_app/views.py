@@ -635,8 +635,8 @@ def recent_work_sessions(request, teacher_id=None):
     else:
         return HttpResponseForbidden("You do not have permission to view work sessions.")
 
-    # Fetch recent work sessions for the teacher
-    work_sessions = WorkSession.objects.filter(teacher=teacher).order_by('-created_at')[:10]
+    # Fetch all work sessions for the teacher
+    work_sessions = WorkSession.objects.filter(teacher=teacher).order_by('-created_at')
 
     context = {
         'teacher': teacher,
