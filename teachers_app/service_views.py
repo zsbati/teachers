@@ -5,11 +5,14 @@ from .models import Service
 from .service_forms import ServiceForm
 
 @login_required
-@user_passes_test(lambda u: u.is_superuser)
+@user_passes_test(lambda u: u.is_inspector_effective)
 def manage_services(request):
     """View to list and manage services"""
     services = Service.objects.all()
-    return render(request, 'superuser/manage_services.html', {'services': services})
+    return render(request, 'superuser/manage_services.html', {
+        'services': services,
+        'can_edit': request.user.is_superuser
+    })
 
 @login_required
 @user_passes_test(lambda u: u.is_superuser)
@@ -47,7 +50,7 @@ def edit_service(request, service_id):
     })
 
 @login_required
-@user_passes_test(lambda u: u.is_superuser)
+@user_passes_test(lambda u: u.is_inspector_effective)
 def delete_service(request, service_id):
     """View to delete a service"""
     service = get_object_or_404(Service, pk=service_id)

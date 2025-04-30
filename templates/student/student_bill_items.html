@@ -1,0 +1,60 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block content %}
+<div class="container mt-4">
+    <div class="card">
+        <div class="card-header bg-primary text-white">
+            <h3 class="mb-0">My Bill Items and Sessions</h3>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Type</th>
+                            <th>Service/Task</th>
+                            <th>Description</th>
+                            <th>Teacher</th>
+                            <th>Unit Price</th>
+                            <th>Quantity</th>
+                            <th>Amount</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for record in records %}
+                            {% if record.bill %}
+                            <tr class="bg-light">
+                                <td>{{ record.bill.month|date:'F Y' }}</td>
+                                <td>Bill Item</td>
+                                <td>{{ record.service_name }}</td>
+                                <td>{{ record.service_description|default:'-' }}</td>
+                                <td>-</td>
+                                <td><span class="text-success">{{ record.service_price_at_billing|floatformat:2 }} €</span></td>
+                                <td>{{ record.quantity|floatformat:0 }}</td>
+                                <td><span class="text-success">{{ record.amount|floatformat:2 }} €</span></td>
+                            </tr>
+                            {% else %}
+                            <tr>
+                                <td>{{ record.created_at|date:'F j, Y H:i' }}</td>
+                                <td>Work Session</td>
+                                <td>{{ record.task.name }}</td>
+                                <td>{{ record.task.description|default:'-' }}</td>
+                                <td>{{ record.teacher }}</td>
+                                <td><span class="text-success">{{ record.task.price|floatformat:2 }} €/hr</span></td>
+                                <td>{{ record.calculated_hours }} hours</td>
+                                <td><span class="text-success">{{ record.total_amount|floatformat:2 }} €</span></td>
+                            </tr>
+                            {% endif %}
+                        {% empty %}
+                        <tr>
+                            <td colspan="8" class="text-center">No services or sessions found.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

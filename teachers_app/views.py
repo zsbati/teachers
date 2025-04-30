@@ -40,6 +40,27 @@ def teacher_or_superuser(function=None, login_url=None, redirect_field_name=None
         return actual_decorator(function)
     return actual_decorator
 
+
+def is_inspector(function=None, login_url=None, redirect_field_name=None):
+    """
+    Decorator that ensures the user is either a superuser or an inspector.
+    """
+    actual_decorator = user_passes_test(
+        lambda u: u.is_superuser or u.is_inspector,
+        login_url=login_url,
+        redirect_field_name=redirect_field_name
+    )
+    if function:
+        return actual_decorator(function)
+    return actual_decorator
+
+
+def is_inspector_effective(user):
+    """
+    Returns True if user is either a superuser or an inspector.
+    """
+    return user.is_superuser or user.is_inspector
+
 def is_superuser(user):
     return user.is_superuser
 
@@ -157,9 +178,9 @@ def manage_teachers(request):
 def manage_students(request):
     active_students = Student.objects.filter(is_active=True)
     deactivated_students = Student.objects.filter(is_active=False)
-    can_edit = request.user.is_superuser
+    can_add = request.user.is_superuser
     form = StudentCreationForm(request.POST or None)
-    if form.is_valid() and can_edit:
+    if form.is_valid() and can_add:
         user = form.save()
         # Set user as student
         user.is_student = True
@@ -176,7 +197,7 @@ def manage_students(request):
         'form': form,
         'active_students': active_students,
         'deactivated_students': deactivated_students,
-        'can_edit': can_edit,
+        'can_add': can_add,
     }
     return render(request, 'superuser/manage_students.html', context)
 

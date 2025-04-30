@@ -20,7 +20,7 @@
                         {% for bill in bills %}
                         <tr>
                             <td>{{ bill.month|date:"F Y" }}</td>
-                            <td>${{ bill.total_amount }}</td>
+                            <td>{{ bill.total_amount|floatformat:2 }} €</td>
                             <td>
                                 {% if bill.is_paid %}
                                 <span class="badge bg-success">Paid</span>

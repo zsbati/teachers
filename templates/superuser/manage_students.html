@@ -13,7 +13,7 @@
 
     <div class="row">
         <!-- Add Student Form -->
-        {% if user.is_inspector %}
+        {% if user.is_superuser %}
         <div class="col-md-4">
             <div class="card">
                 <div class="card-header">
@@ -68,14 +68,14 @@
                                 <td>{{ student.user.email }}</td>
                                 <td>{{ student.phone }}</td>
                                 <td>
-                                    {% if user.is_inspector %}
+                                    {% if user.is_superuser %}
                                     <a href="{% url 'edit_student' student.id %}"
                                        class="btn btn-primary btn-sm">Edit</a>
                                     <a href="{% url 'change_student_password' student.id %}"
                                        class="btn btn-sm btn-info me-2">Change Password</a>
                                     <a href="{% url 'remove_student' student.id %}" class="btn btn-danger btn-sm">Deactivate</a>
-                                    <a href="{% url 'student_bill_items' student.id %}" class="btn btn-sm btn-secondary ms-2">Services/Sessions</a>
                                     {% endif %}
+                                    <a href="{% url 'student_bill_items' student.id %}" class="btn btn-sm btn-secondary ms-2">Services/Sessions</a>
                                 </td>
                             </tr>
                             {% empty %}
@@ -116,14 +116,14 @@
                                 <td>{{ student.user.email }}</td>
                                 <td>{{ student.phone }}</td>
                                 <td>
-                                    {% if user.is_inspector %}
+                                    {% if user.is_superuser %}
                                     <a href="{% url 'edit_student' student.id %}" class="btn btn-sm btn-primary me-2">Edit</a>
                                     <a href="{% url 'reactivate_student' student.id %}"
                                        class="btn btn-sm btn-success me-2">Reactivate</a>
                                     <a href="{% url 'delete_student' student.id %}"
                                        class="btn btn-sm btn-danger">Delete</a>
-                                    <a href="{% url 'student_bill_items' student.id %}" class="btn btn-sm btn-secondary ms-2">Services/Sessions</a>
                                     {% endif %}
+                                    <a href="{% url 'student_bill_items' student.id %}" class="btn btn-sm btn-secondary ms-2">Services/Sessions</a>
                                 </td>
                             </tr>
                             {% empty %}

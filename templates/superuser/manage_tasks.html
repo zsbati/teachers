@@ -5,7 +5,7 @@
 {% block content %}
 <div class="container mt-4">
     <div class="row">
-        {% if user.is_inspector %}
+        {% if user.is_superuser %}
         <!-- Place Add Task and Current Tasks side by side -->
         <div class="col-md-4">
             <div class="card">
@@ -44,9 +44,12 @@
             </div>
         </div>
         <div class="col-md-8">
-        {% else %}
-        <div class="col-12">
         {% endif %}
+        
+        <!-- Current Tasks List -->
+        <div class="col-12">
+            <div class="card shadow-sm border-0 mt-0">
+                <div class="card-header bg-primary text-white d-flex align-items-center">
             <div class="card shadow-sm border-0 mt-0">
                 <div class="card-header bg-primary text-white d-flex align-items-center">
                     <h4 class="mb-0 flex-grow-1">Current Tasks</h4>
@@ -60,7 +63,7 @@
                                     <th>Hourly Rate</th>
                                     <th>Student Price</th>
                                     <th>Description</th>
-                                    {% if user.is_inspector %}
+                                    {% if user.is_superuser %}
                                     <th>Actions</th>
                                     {% endif %}
                                 </tr>
@@ -72,7 +75,7 @@
                                     <td>${{ task.hourly_rate }}</td>
                                     <td>${{ task.price }}</td>
                                     <td>{{ task.description|default:"Not specified"|truncatewords:10 }}</td>
-                                    {% if user.is_inspector %}
+                                    {% if user.is_superuser %}
                                     <td>
                                         <div class="btn-group btn-group-sm">
                                             <a href="{% url 'edit_task' task.id %}" class="btn btn-warning text-white" title="Edit"><i class="fas fa-edit"></i> Edit</a>
@@ -82,7 +85,7 @@
                                     {% endif %}
                                 </tr>
                                 {% empty %}
-                                <tr><td colspan="{% if user.is_inspector %}5{% else %}4{% endif %}" class="text-center">No tasks found.</td></tr>
+                                <tr><td colspan="{% if user.is_superuser %}5{% else %}4{% endif %}" class="text-center">No tasks found.</td></tr>
                                 {% endfor %}
                             </tbody>
                         </table>
