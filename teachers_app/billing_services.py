@@ -50,8 +50,16 @@ class StudentBillingService:
             service_description=work_session.task.description or '',
             service_price_at_billing=service_price,
             quantity=quantity,
-            amount=amount,
+            amount=amount
         )
+        
+        # Update the Bill's total amount
+        bill.total_amount = BillItem.objects.filter(bill=bill).aggregate(
+            total=models.Sum('amount', default=0)
+        )['total']
+        bill.save()
+        
+        return bill_item
         
         # Update the Bill's total_amount
         bill.total_amount = sum(item.amount for item in bill.items.all())

@@ -156,10 +156,36 @@ def bill_detail(request, bill_id):
 @user_passes_test(lambda u: u.is_inspector, login_url=None)
 def student_bill_items(request, student_id):
     student = get_object_or_404(Student, pk=student_id)
+    
+    # Get all bill items for this student
     bill_items = BillItem.objects.filter(bill__student=student).select_related('bill').order_by('-bill__month')
+    
+    # Get all work sessions for this student
+    work_sessions = WorkSession.objects.filter(student=student).select_related('teacher', 'task').order_by('-created_at')
+    
+    # Combine and sort by date
+    from operator import attrgetter
+    import datetime
+    from django.utils import timezone
+    
+    # Convert all dates to timezone-aware datetime objects for consistent comparison
+    def get_sort_date(record):
+        if hasattr(record, 'bill'):
+            # Convert date to datetime at midnight and make it timezone-aware
+            naive_dt = datetime.datetime.combine(record.bill.month, datetime.time.min)
+            return timezone.make_aware(naive_dt)
+        else:
+            # Ensure created_at is timezone-aware
+            if timezone.is_naive(record.created_at):
+                return timezone.make_aware(record.created_at)
+            return record.created_at
+    
+    combined_records = list(bill_items) + list(work_sessions)
+    combined_records.sort(key=get_sort_date, reverse=True)
+    
     return render(request, 'superuser/student_bill_items.html', {
         'student': student,
-        'bill_items': bill_items,
+        'records': combined_records,
     })
 
 @login_required
