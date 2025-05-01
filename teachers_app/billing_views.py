@@ -54,8 +54,12 @@ def create_bill(request, student_id):
             bill_item.save()
 
             # Recalculate total amount
-            bill.total_amount = bill.items.aggregate(
-                total=Sum('amount')
+            bill.total_amount = BillItem.objects.filter(
+                bill=bill,
+                service_price_at_billing__gt=0,
+                amount__gt=0
+            ).aggregate(
+                total=Sum('amount', default=0)
             )['total']
             bill.save()
 
@@ -158,7 +162,11 @@ def student_bill_items(request, student_id):
     student = get_object_or_404(Student, pk=student_id)
     
     # Get all bill items for this student
-    bill_items = BillItem.objects.filter(bill__student=student).select_related('bill').order_by('-bill__month')
+    bill_items = BillItem.objects.filter(
+        bill__student=student,
+        service_price_at_billing__gt=0,
+        amount__gt=0
+    ).select_related('bill').order_by('-bill__month')
     
     # Get all work sessions for this student
     work_sessions = WorkSession.objects.filter(student=student).select_related('teacher', 'task').order_by('-created_at')

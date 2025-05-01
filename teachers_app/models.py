@@ -84,17 +84,28 @@ class WorkSession(models.Model):
     end_time = models.DateTimeField(null=True, blank=True)
 
     created_at = models.DateTimeField(auto_now_add=True)
-    total_amount = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
+    total_amount = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)  # Student billing amount
+    teacher_payment_amount = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)  # Teacher's payment amount
 
     def save(self, *args, **kwargs):
+        import logging
+        logger = logging.getLogger(__name__)
+        logger.debug("=== WorkSession save method started ===")
+        logger.debug(f"Initial state: hourly_rate={self.hourly_rate}, stored_hours={self.stored_hours}, task={self.task}")
+        logger.debug(f"Task price: {self.task.price}, Task hourly_rate: {self.task.hourly_rate}")
+        
         # Store the hourly rate at creation time if it's a new record
         if not self.pk:  # Only set on creation
+            logger.debug("New record - setting hourly rate from task")
             self.hourly_rate = self.task.hourly_rate
-
+            logger.debug(f"Task hourly rate set to: {self.hourly_rate}")
+        
         # Store hours based on entry type
+        logger.debug(f"Entry type: {self.entry_type}")
         if self.entry_type == 'manual':
             if self.manual_hours is not None:
                 self.stored_hours = self.manual_hours
+                logger.debug(f"Manual hours set to: {self.stored_hours}")
             else:
                 raise ValueError("Manual entry type requires manual_hours")
         elif self.entry_type == 'clock':
@@ -102,6 +113,7 @@ class WorkSession(models.Model):
                 hours = (self.clock_out - self.clock_in).total_seconds() / 3600
                 # Round clock-in/out hours to nearest hour
                 self.stored_hours = Decimal(str(hours)).quantize(Decimal('1'), rounding=ROUND_HALF_UP)
+                logger.debug(f"Clock hours calculated: {self.stored_hours}")
             else:
                 raise ValueError("Clock entry type requires clock_in and clock_out")
         elif self.entry_type == 'time_range':
@@ -110,16 +122,37 @@ class WorkSession(models.Model):
                 hours = Decimal(str(duration.total_seconds() / 3600))
                 # Round time-range hours to nearest hour
                 self.stored_hours = hours.quantize(Decimal('1'), rounding=ROUND_HALF_UP)
+                logger.debug(f"Time range hours calculated: {self.stored_hours}")
             else:
                 raise ValueError("Time range entry type requires start_time and end_time")
         
-        # Calculate total amount using stored values
-        if self.stored_hours is not None and self.hourly_rate is not None:
-            self.total_amount = self.stored_hours * self.hourly_rate
+        # Calculate amounts for both student and teacher
+        logger.debug(f"Final hourly rate: {self.hourly_rate}")
+        logger.debug(f"Final stored hours: {self.stored_hours}")
+        logger.debug(f"Task price: {self.task.price}, Task hourly_rate: {self.task.hourly_rate}")
+        
+        # Calculate student billing amount (0 for free tasks)
+        if self.task.price == 0 or self.task.price == Decimal('0.00'):
+            logger.debug("Free task for student - setting student total_amount to 0")
+            self.total_amount = Decimal('0.00')
         else:
-            self.total_amount = 0
+            # Calculate total amount for paid tasks (student billing)
+            if self.stored_hours is None or self.stored_hours == 0 or self.stored_hours == Decimal('0.00'):
+                logger.debug("Stored hours is invalid")
+                raise ValueError("Hours must be a positive number")
+            self.total_amount = self.stored_hours * self.task.price  # Use task.price for student billing
+            logger.debug(f"Calculated student total amount: {self.total_amount}")
+        
+        # Calculate teacher payment amount (always based on hourly_rate)
+        if self.stored_hours is not None and self.hourly_rate is not None:
+            self.teacher_payment_amount = self.stored_hours * self.hourly_rate
+            logger.debug(f"Calculated teacher payment amount: {self.teacher_payment_amount}")
+        else:
+            logger.debug("No teacher payment calculated - invalid hours or hourly_rate")
+            self.teacher_payment_amount = None
         
         super().save(*args, **kwargs)
+        logger.debug("=== WorkSession save method completed ===")
 
     def clean(self):
         """Validate the entry type requirements"""

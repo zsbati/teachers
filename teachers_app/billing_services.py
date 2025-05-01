@@ -23,10 +23,30 @@ class StudentBillingService:
         Create a BillItem for a WorkSession if a student is associated. Finds or creates the Bill for the student for the current month.
         Updates the Bill's total_amount.
         """
+        import logging
+        logger = logging.getLogger(__name__)
+        
+        # Log the incoming work session data
+        logger.debug(f"Processing work session: {work_session.task.name}, price: {work_session.task.price}, hours: {work_session.stored_hours}")
+        
         # Only proceed if the work session has a student
         if not work_session.student:
+            logger.debug("No student associated with work session - returning None")
             return None
+            
+        # Get task price and stored hours
+        service_price = work_session.task.price
+        quantity = work_session.stored_hours
         
+        # Calculate bill amount (0 for free tasks)
+        amount = service_price * quantity if service_price > 0 else Decimal('0.00')
+        logger.debug(f"Calculated bill amount: {amount} (type: {type(amount)})")
+        
+        # Skip bill item creation for free tasks
+        if amount == 0 or amount == Decimal('0.00'):
+            logger.debug("Free task - skipping bill item creation")
+            return None
+            
         # Determine the billing month (first day of the session's month)
         session_date = work_session.created_at.date() if work_session.created_at else date.today()
         billing_month = session_date.replace(day=1)
@@ -41,9 +61,6 @@ class StudentBillingService:
         )
         
         # Create the BillItem
-        service_price = work_session.task.price
-        quantity = work_session.stored_hours or 0
-        amount = service_price * quantity
         bill_item = BillItem.objects.create(
             bill=bill,
             service_name=work_session.task.name,
@@ -54,15 +71,14 @@ class StudentBillingService:
         )
         
         # Update the Bill's total amount
-        bill.total_amount = BillItem.objects.filter(bill=bill).aggregate(
+        bill.total_amount = BillItem.objects.filter(
+            bill=bill,
+            service_price_at_billing__gt=0,
+            amount__gt=0
+        ).aggregate(
             total=models.Sum('amount', default=0)
         )['total']
         bill.save()
         
         return bill_item
         
-        # Update the Bill's total_amount
-        bill.total_amount = sum(item.amount for item in bill.items.all())
-        bill.save(update_fields=['total_amount'])
-        
-        return bill_item
