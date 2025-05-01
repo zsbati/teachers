@@ -394,7 +394,8 @@ def charge_student_for_service(request):
     if request.method == 'POST' and selected_student and selected_service:
         student = get_object_or_404(Student, id=selected_student)
         service = get_object_or_404(Service, id=selected_service)
-        quantity = request.POST.get('quantity', 1)
+        quantity_str = request.POST.get('quantity', '1')
+        quantity = int(quantity_str)
         description = request.POST.get('description', '')
         period = datetime(selected_year, selected_month, 1, tzinfo=now.tzinfo)
         bill, _ = Bill.objects.get_or_create(student=student, month=period, defaults={'total_amount': 0})
