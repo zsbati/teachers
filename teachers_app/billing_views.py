@@ -2,7 +2,8 @@ from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.utils import timezone
-from django.db.models import Sum
+from django.db import models
+from django.db.models import Sum, Q
 from dateutil.relativedelta import relativedelta
 from .models import Student, Task, WorkSession, Service
 from .billing_models import Bill, BillItem
@@ -17,11 +18,10 @@ def create_bill(request, student_id):
     """Create or update a bill for a student"""
     student = get_object_or_404(Student, pk=student_id)
 
-    # Get month/year from GET, default to current
-    now = timezone.now()
-    month = int(request.GET.get('month', now.month))
-    year = int(request.GET.get('year', now.year))
-    selected_month = datetime(year, month, 1, tzinfo=now.tzinfo)
+    # Get month/year from URL parameters, default to current
+    month = int(request.GET.get('month', '4'))  # Default to April
+    year = int(request.GET.get('year', '2025'))  # Default to 2025
+    selected_month = datetime(year, month, 1)
 
     # Get existing bill for this month if it exists
     bill = Bill.objects.filter(student=student, month=selected_month).first()
@@ -29,6 +29,7 @@ def create_bill(request, student_id):
     if request.method == 'POST':
         form = BillItemForm(request.POST)
         if form.is_valid():
+            # Handle bill item creation
             if not bill:
                 bill = Bill.objects.create(
                     student=student,
@@ -65,14 +66,58 @@ def create_bill(request, student_id):
 
             messages.success(request, f'Service added to bill. Total amount: ${bill.total_amount}')
             return redirect('create_bill', student_id=student_id)
+    elif request.method == 'GET' and 'action' in request.GET and request.GET['action'] == 'create':
+        # Handle bill creation
+        if not bill:
+            messages.error(request, 'No bill found for this month. Please add bill items first.')
+            return redirect('create_bill', student_id=student_id)
+
+        # Get work sessions for this student and month
+        work_sessions = WorkSession.objects.filter(
+            Q(student=student, entry_type='manual', created_at__date__year=selected_month.year, created_at__date__month=selected_month.month) |
+            Q(student=student, entry_type='clock', clock_in__date__year=selected_month.year, clock_in__date__month=selected_month.month) |
+            Q(student=student, entry_type='time_range', start_time__date__year=selected_month.year, start_time__date__month=selected_month.month)
+        ).order_by('created_at', 'clock_in', 'start_time')
+
+        # Calculate total bill amount
+        bill_items_total = BillItem.objects.filter(
+            bill=bill,
+            service_price_at_billing__gt=0,
+            amount__gt=0
+        ).aggregate(total=Sum('amount'))['total'] or 0
+
+        work_sessions_total = work_sessions.aggregate(total=Sum('total_amount'))['total'] or 0
+
+        bill.total_amount = bill_items_total + work_sessions_total
+        bill.save()
+
+        messages.success(request, f'Bill successfully created for {student} for {selected_month.strftime("%B %Y")}!')
+        return redirect('student_bills', student_id=student_id)
     else:
         form = BillItemForm()
 
-    # Get work sessions for this month
+    # Get work sessions for this student and month
     work_sessions = WorkSession.objects.filter(
-        start_time__date__gte=selected_month,
-        start_time__date__lt=selected_month + relativedelta(months=1)
-    ).order_by('start_time')
+        Q(student=student, entry_type='manual', created_at__date__year=selected_month.year, created_at__date__month=selected_month.month) |
+        Q(student=student, entry_type='clock', clock_in__date__year=selected_month.year, clock_in__date__month=selected_month.month) |
+        Q(student=student, entry_type='time_range', start_time__date__year=selected_month.year, start_time__date__month=selected_month.month)
+    ).order_by('created_at', 'clock_in', 'start_time')
+    
+    # Debug logging
+    print("=== Work Sessions Query Details ===")
+    print(f"Selected month: {selected_month}")
+    print(f"Student ID: {student.id}")
+    print(f"Work sessions query: {work_sessions.query}")
+    print(f"Number of work sessions found: {work_sessions.count()}")
+    
+    if work_sessions.exists():
+        first_session = work_sessions.first()
+        print(f"First work session details:")
+        print(f"  Start time: {first_session.start_time}")
+        print(f"  Task: {first_session.task.name}")
+        print(f"  Teacher: {first_session.teacher}")
+        print(f"  Stored hours: {first_session.stored_hours}")
+        print(f"  Total amount: {first_session.total_amount}")
 
     # Calculate total hours
     total_hours = work_sessions.aggregate(
@@ -87,23 +132,64 @@ def create_bill(request, student_id):
 
     # Prepare months and years for dropdowns
     months = [{'value': i, 'name': calendar.month_name[i]} for i in range(1, 13)]
-    years = list(range(now.year - 5, now.year + 2))  # Last 5 years to next year
+    years = list(range(selected_month.year - 5, selected_month.year + 2))  # Last 5 years to next year
 
     context = {
         'student': student,
         'bill': bill,
+        'bill_items': bill_items,
         'work_sessions': work_sessions,
         'total_hours': total_hours,
         'services': services,
-        'bill_items': bill_items,
-        'selected_month': month,
-        'selected_year': year,
+        'form': form,
         'months': months,
         'years': years,
-        'form': form
+        'selected_month': selected_month,
+        'selected_month_year': selected_month.year,
+        'selected_month_month': selected_month.month
     }
 
     return render(request, 'superuser/create_bill.html', context)
+
+@login_required
+@user_passes_test(lambda u: u.is_superuser)
+def create_bill_final(request, student_id):
+    """Create a final bill for a student"""
+    student = get_object_or_404(Student, pk=student_id)
+
+    # Get month/year from URL parameters
+    month = int(request.GET.get('month', '4'))  # Default to April
+    year = int(request.GET.get('year', '2025'))  # Default to 2025
+    selected_month = datetime(year, month, 1)
+
+    # Get existing bill for this month
+    bill = Bill.objects.filter(student=student, month=selected_month).first()
+
+    if not bill:
+        messages.error(request, 'No bill found for this month. Please add bill items first.')
+        return redirect('create_bill', student_id=student_id)
+
+    # Get work sessions for this student and month
+    work_sessions = WorkSession.objects.filter(
+        Q(student=student, entry_type='manual', created_at__date__year=selected_month.year, created_at__date__month=selected_month.month) |
+        Q(student=student, entry_type='clock', clock_in__date__year=selected_month.year, clock_in__date__month=selected_month.month) |
+        Q(student=student, entry_type='time_range', start_time__date__year=selected_month.year, start_time__date__month=selected_month.month)
+    ).order_by('created_at', 'clock_in', 'start_time')
+
+    # Calculate total bill amount
+    bill_items_total = BillItem.objects.filter(
+        bill=bill,
+        service_price_at_billing__gt=0,
+        amount__gt=0
+    ).aggregate(total=Sum('amount'))['total'] or 0
+
+    work_sessions_total = work_sessions.aggregate(total=Sum('total_amount'))['total'] or 0
+
+    bill.total_amount = bill_items_total + work_sessions_total
+    bill.save()
+
+    messages.success(request, f'Bill successfully created for {student} for {selected_month.strftime("%B %Y")}!')
+    return redirect('student_bills', student_id=student_id)
 
 @login_required
 @user_passes_test(lambda u: u.is_superuser)
@@ -150,10 +236,36 @@ def student_bills(request, student_id):
 def bill_detail(request, bill_id):
     """View bill details"""
     bill = get_object_or_404(Bill, pk=bill_id)
+    
+    # Get work sessions for this bill's month
+    work_sessions = WorkSession.objects.filter(
+        Q(student=bill.student, entry_type='manual', created_at__date__year=bill.month.year, created_at__date__month=bill.month.month) |
+        Q(student=bill.student, entry_type='clock', clock_in__date__year=bill.month.year, clock_in__date__month=bill.month.month) |
+        Q(student=bill.student, entry_type='time_range', start_time__date__year=bill.month.year, start_time__date__month=bill.month.month)
+    ).order_by('created_at', 'clock_in', 'start_time')
+
+    # Calculate total hours
+    total_hours = work_sessions.aggregate(
+        total_hours=Sum('stored_hours')
+    )['total_hours'] or 0
+
+    # Calculate work sessions total
+    work_sessions_total = work_sessions.aggregate(
+        total=Sum('total_amount')
+    )['total'] or 0
+
+    # Calculate bill items total
+    bill_items_total = bill.items.aggregate(
+        total=Sum('amount')
+    )['total'] or 0
 
     return render(request, 'student/bill_detail.html', {
         'bill': bill,
-        'total': bill.items.aggregate(Sum('amount'))['amount__sum']
+        'work_sessions': work_sessions,
+        'total_hours': total_hours,
+        'work_sessions_total': work_sessions_total,
+        'bill_items_total': bill_items_total,
+        'total': bill_items_total + work_sessions_total
     })
 
 @login_required

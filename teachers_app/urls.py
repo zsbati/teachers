@@ -41,6 +41,7 @@ urlpatterns = [
     path('record-work/<int:teacher_id>/', views.record_work, name='record_work_with_teacher'),
     path('clock-out/<int:session_id>/', views.clock_out, name='clock_out'),
     path('dashboard/recent-work-sessions/<int:teacher_id>/', views.recent_work_sessions, name='recent_work_sessions'),
+    path('dashboard/student/<int:student_id>/bills/create/', billing_views.create_bill_final, name='create_bill'),
 
     # Salary Report URLs
     path('superuser/salary-reports/', views.list_salary_reports, name='list_salary_reports'),

@@ -11,32 +11,94 @@
         <div class="card-body">
           <p><strong>Month:</strong> {{ bill.month|date:"F Y" }}</p>
           <p><strong>Status:</strong> <span class="badge {% if bill.is_paid %}bg-success{% else %}bg-warning text-dark{% endif %}">{% if bill.is_paid %}Paid{% else %}Unpaid{% endif %}</span></p>
-          <div class="table-responsive">
-            <table class="table table-hover mb-0 align-middle">
-              <thead class="table-light">
-                <tr>
-                  <th>Service</th>
-                  <th>Price</th>
-                  <th>Quantity</th>
-                  <th>Amount</th>
-                </tr>
-              </thead>
-              <tbody>
-                {% for item in bill.items.all %}
-                <tr>
-                  <td>{{ item.service_name }}</td>
-                  <td>{{ item.service_price_at_billing|floatformat:2 }} €</td>
-                  <td>{{ item.quantity|floatformat:0 }}</td>
-                  <td>{{ item.amount|floatformat:2 }} €</td>
-                </tr>
-                {% empty %}
-                <tr><td colspan="4" class="text-center">No items found.</td></tr>
-                {% endfor %}
-              </tbody>
-            </table>
+
+          <!-- Bill Items Section -->
+          <div class="mb-4">
+            <h5 class="mb-3">Bill Items</h5>
+            <div class="table-responsive">
+              <table class="table table-hover mb-0 align-middle">
+                <thead class="table-light">
+                  <tr>
+                    <th>Service</th>
+                    <th>Description</th>
+                    <th>Price</th>
+                    <th>Quantity</th>
+                    <th>Amount</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for item in bill.items.all %}
+                  <tr>
+                    <td>{{ item.service_name }}</td>
+                    <td>{{ item.service_description }}</td>
+                    <td>{{ item.service_price_at_billing|floatformat:2 }} €</td>
+                    <td>{{ item.quantity|floatformat:0 }}</td>
+                    <td>{{ item.amount|floatformat:2 }} €</td>
+                  </tr>
+                  {% empty %}
+                  <tr><td colspan="5" class="text-center">No bill items found.</td></tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+            <div class="mt-3">
+              <strong>Bill Items Total:</strong> {{ bill_items_total|floatformat:2 }} €
+            </div>
           </div>
-          <div class="mt-3">
-            <strong>Total:</strong> ${{ bill.total_amount }}
+
+          <!-- Work Sessions Section -->
+          <div class="mb-4">
+            <h5 class="mb-3">Work Sessions</h5>
+            <div class="table-responsive">
+              <table class="table table-hover mb-0 align-middle">
+                <thead class="table-light">
+                  <tr>
+                    <th>Date</th>
+                    <th>Task</th>
+                    <th>Teacher</th>
+                    <th>Hours</th>
+                    <th>Amount</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for session in work_sessions %}
+                  <tr>
+                    <td>
+                      {% if session.entry_type == 'manual' %}
+                        {{ session.created_at|date:"Y-m-d H:i" }}
+                      {% elif session.entry_type == 'clock' %}
+                        {{ session.clock_in|date:"Y-m-d H:i" }}
+                      {% elif session.entry_type == 'time_range' %}
+                        {{ session.start_time|date:"Y-m-d H:i" }}
+                      {% endif %}
+                    </td>
+                    <td>{{ session.task.name }}</td>
+                    <td>{{ session.teacher }}</td>
+                    <td>{{ session.stored_hours|floatformat:2 }}</td>
+                    <td>{{ session.total_amount|floatformat:2 }} €</td>
+                  </tr>
+                  {% empty %}
+                  <tr><td colspan="5" class="text-center">No work sessions found.</td></tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+            <div class="mt-3">
+              <strong>Total Hours:</strong> {{ total_hours|floatformat:2 }}<br>
+              <strong>Work Sessions Total:</strong> {{ work_sessions_total|floatformat:2 }} €
+            </div>
+          </div>
+
+          <!-- Final Totals Section -->
+          <div class="mt-4">
+            <div class="d-flex justify-content-between align-items-center">
+              <h5 class="mb-0">Final Totals</h5>
+              <div class="d-flex flex-column text-end">
+                <span class="text-muted">Bill Items: {{ bill_items_total|floatformat:2 }} €</span>
+                <span class="text-muted">Work Sessions: {{ work_sessions_total|floatformat:2 }} €</span>
+                <h4 class="mb-0">Total: {{ total|floatformat:2 }} €</h4>
+              </div>
+            </div>
           </div>
         </div>
       </div>

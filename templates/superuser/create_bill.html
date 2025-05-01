@@ -9,7 +9,7 @@
                 <label for="month" class="form-label">Month:</label>
                 <select name="month" id="month" class="form-select">
                   {% for m in months %}
-                    <option value="{{ m.value }}" {% if m.value == selected_month %}selected{% endif %}>{{ m.name }}</option>
+                    <option value="{{ m.value }}" {% if m.value == selected_month.month %}selected{% endif %}>{{ m.name }}</option>
                   {% endfor %}
                 </select>
               </div>
@@ -17,7 +17,7 @@
                 <label for="year" class="form-label">Year:</label>
                 <select name="year" id="year" class="form-select">
                   {% for y in years %}
-                    <option value="{{ y }}" {% if y == selected_year %}selected{% endif %}>{{ y }}</option>
+                    <option value="{{ y }}" {% if y == selected_month.year %}selected{% endif %}>{{ y }}</option>
                   {% endfor %}
                 </select>
               </div>
@@ -25,7 +25,7 @@
                 <button type="submit" class="btn btn-primary">Go</button>
               </div>
             </form>
-            <p class="text-muted">Billing Month: {{ current_month|date:"F Y" }}</p>
+            <p class="text-muted">Billing Month: {{ selected_month.year }} - {{ selected_month|date:"F" }}</p>
         </div>
         <div class="card-body">
             <div class="row mb-4">
@@ -63,73 +63,103 @@
                 </div>
             </div>
 
-            {% if bill_items %}
             <div class="card mb-4">
-                <div class="card-header">
+                <div class="card-header bg-secondary text-white">
                     <h5 class="card-title">Bill Items</h5>
                 </div>
                 <div class="card-body">
                     <div class="table-responsive">
-                        <table class="table">
-                            <thead>
-                                <tr>
-                                    <th>Service</th>
-                                    <th>Price</th>
-                                    <th>Quantity</th>
-                                    <th>Amount</th>
-                                    <th>Description</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% for item in bill_items %}
-                                <tr>
-                                    <td>{{ item.service_name }}</td>
-                                    <td>${{ item.service_price_at_billing }}</td>
-                                    <td>{{ item.quantity }}</td>
-                                    <td>${{ item.amount }}</td>
-                                    <td>{{ item.service_description|default:"-" }}</td>
-                                </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-            {% endif %}
-
-            {% if work_sessions %}
-            <div class="card">
-                <div class="card-header">
-                    <h5 class="card-title">Work Sessions</h5>
-                </div>
-                <div class="card-body">
-                    <div class="table-responsive">
-                        <table class="table">
+                        <table class="table table-striped table-hover">
                             <thead>
                                 <tr>
                                     <th>Date</th>
-                                    <th>Duration</th>
-                                    <th>Task</th>
-                                    <th>Teacher</th>
+                                    <th>Type</th>
+                                    <th>Service</th>
+                                    <th>Description</th>
+                                    <th>Unit Price</th>
+                                    <th>Quantity</th>
+                                    <th>Amount</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                {% for session in work_sessions %}
-                                <tr>
-                                    <td>{{ session.start_time|date:"Y-m-d" }}</td>
-                                    <td>{{ session.duration }} hours</td>
-                                    <td>{{ session.task.name }}</td>
-                                    <td>{{ session.teacher }}</td>
+                                {% if bill_items %}
+                                {% for item in bill_items %}
+                                <tr class="bg-light">
+                                    <td>{{ bill.month|date:'F Y' }}</td>
+                                    <td>Bill Item</td>
+                                    <td>{{ item.service_name }}</td>
+                                    <td>{{ item.service_description|default:'-' }}</td>
+                                    <td>${{ item.service_price_at_billing|floatformat:2 }}</td>
+                                    <td>{{ item.quantity|floatformat:0 }}</td>
+                                    <td>${{ item.amount|floatformat:2 }}</td>
                                 </tr>
                                 {% endfor %}
+                                {% else %}
+                                <tr>
+                                    <td colspan="7" class="text-center">No bill items added yet</td>
+                                </tr>
+                                {% endif %}
                             </tbody>
                         </table>
                     </div>
                 </div>
             </div>
-            {% endif %}
+
+            <div class="card">
+                <div class="card-header bg-secondary text-white">
+                    <h5 class="card-title">Work Sessions</h5>
+                </div>
+                <div class="card-body">
+                    <p>Debug Info:</p>
+                    <p>Selected Month: {{ selected_month }}</p>
+                    <p>Student ID: {{ student.id }}</p>
+                    <p>Work Sessions Count: {{ work_sessions|length }}</p>
+                    <div class="table-responsive">
+                        <table class="table table-striped table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Type</th>
+                                    <th>Task</th>
+                                    <th>Description</th>
+                                    <th>Teacher</th>
+                                    <th>Unit Price</th>
+                                    <th>Duration</th>
+                                    <th>Amount</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% if work_sessions %}
+                                {% for session in work_sessions %}
+                                <tr>
+                                    <td>{{ session.start_time|date:"Y-m-d H:i" }}</td>
+                                    <td>Work Session</td>
+                                    <td>{{ session.task.name }}</td>
+                                    <td>{{ session.task.description|default:'-' }}</td>
+                                    <td>{{ session.teacher }}</td>
+                                    <td>${{ session.task.price|floatformat:2 }}/hr</td>
+                                    <td>{{ session.stored_hours|floatformat:2 }} hours</td>
+                                    <td>${{ session.total_amount|floatformat:2 }}</td>
+                                </tr>
+                                {% endfor %}
+                                {% else %}
+                                <tr>
+                                    <td colspan="8" class="text-center">No work sessions found for this month</td>
+                                </tr>
+                                {% endif %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
         </div>
         <div class="card-footer text-end">
+            <form method="get" action="" class="d-inline">
+                <input type="hidden" name="action" value="create">
+                <input type="hidden" name="month" value="{{ selected_month_month }}">
+                <input type="hidden" name="year" value="{{ selected_month_year }}">
+                <button type="submit" class="btn btn-primary">Create Bill</button>
+            </form>
             <a href="{% url 'student_bills' student_id=student.id %}" class="btn btn-secondary">Back to Bills</a>
         </div>
     </div>

@@ -140,7 +140,7 @@ class WorkSession(models.Model):
             if self.stored_hours is None or self.stored_hours == 0 or self.stored_hours == Decimal('0.00'):
                 logger.debug("Stored hours is invalid")
                 raise ValueError("Hours must be a positive number")
-            self.total_amount = self.stored_hours * self.task.price  # Use task.price for student billing
+            self.total_amount = self.stored_hours * self.hourly_rate  # Use hourly_rate for student billing
             logger.debug(f"Calculated student total amount: {self.total_amount}")
         
         # Calculate teacher payment amount (always based on hourly_rate)
