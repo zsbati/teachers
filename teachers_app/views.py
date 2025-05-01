@@ -422,11 +422,11 @@ def edit_work_session(request, session_id):
 @user_passes_test(lambda u: u.is_superuser)
 def delete_work_session(request, session_id):
     session = get_object_or_404(WorkSession, id=session_id)
-    teacher_id = session.teacher_id
+    student_id = session.student_id
     if request.method == "POST":
         session.delete()
         messages.success(request, 'Work session deleted successfully.')
-        return redirect('recent_work_sessions', teacher_id=teacher_id)
+        return redirect('student_bill_items', student_id=student_id)
     
     context = {
         'session': session
