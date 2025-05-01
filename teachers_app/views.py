@@ -624,20 +624,42 @@ def record_work(request, teacher_id=None):
 
 
 @login_required
-@user_passes_test(lambda u: u.is_teacher)
 def clock_out(request, session_id):
+    """
+    Handle clocking out for both teachers and superusers.
+    Teachers can only clock out their own sessions,
+    while superusers can clock out any teacher's session.
+    """
     if request.method == 'POST':
-        session = get_object_or_404(
-            WorkSession,
-            id=session_id,
-            teacher=request.user.teacher,
-            entry_type='clock',
-            clock_out__isnull=True
-        )
+        # Get the session
+        session = get_object_or_404(WorkSession, id=session_id, entry_type='clock', clock_out__isnull=True)
+        
+        # Validate permissions
+        if request.user.is_teacher:
+            # Teachers can only clock out their own sessions
+            if session.teacher.user != request.user:
+                raise PermissionDenied("You can only clock out your own sessions.")
+        elif not request.user.is_superuser:
+            raise PermissionDenied("You don't have permission to clock out sessions.")
+        
+        # Set clock out time
         session.clock_out = timezone.now()
         session.save()
+        
+        # Create bill item if there's a student associated
+        from .billing_services import StudentBillingService
+        if session.student:
+            StudentBillingService.create_bill_item_for_work_session(session)
+        
         messages.success(request, 'Clocked out successfully!')
-    return redirect('record_work')
+        
+        # Redirect back to the page we came from
+        next_url = request.GET.get('next') or request.POST.get('next')
+        if next_url:
+            return redirect(next_url)
+        
+        # Default redirect to dashboard
+        return redirect('dashboard')
 
 
 @login_required

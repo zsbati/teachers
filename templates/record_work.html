@@ -39,13 +39,15 @@
                 <h3>Clock In/Out</h3>
             </div>
             <div class="card-body">
-                {% if active_session %}
+                 {% if active_session %}
                 <div class="alert alert-info">
                     <h5>Currently Clocked In</h5>
                     <p>Task: {{ active_session.task }}</p>
-                    <p>Started: {{ active_session.clock_in }}</p>
+                    <p>Started: {{ active_session.clock_in|date:"F j, Y, g:i A" }}</p>
+                    <p>Duration: {{ active_session.calculated_hours|floatformat:2 }} hours</p>
                     <form method="post" action="{% url 'clock_out' active_session.id %}">
                         {% csrf_token %}
+                        <input type="hidden" name="next" value="{{ request.path }}">
                         <button type="submit" class="btn btn-warning">Clock Out</button>
                     </form>
                 </div>
@@ -57,7 +59,7 @@
                         <div class="alert alert-danger">{{ clock_form.non_field_errors }}</div>
                     {% endif %}
                     {{ clock_form.as_p }}
-                    <button type="submit" class="btn btn-primary">Record Hours</button>
+                    <button type="submit" class="btn btn-primary">Clock In</button>
                 </form>
                 {% endif %}
             </div>

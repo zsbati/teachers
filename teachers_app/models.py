@@ -109,13 +109,17 @@ class WorkSession(models.Model):
             else:
                 raise ValueError("Manual entry type requires manual_hours")
         elif self.entry_type == 'clock':
+            # For clock entry type, we only calculate hours when clocking out
             if self.clock_in and self.clock_out:
                 hours = (self.clock_out - self.clock_in).total_seconds() / 3600
                 # Round clock-in/out hours to nearest hour
                 self.stored_hours = Decimal(str(hours)).quantize(Decimal('1'), rounding=ROUND_HALF_UP)
                 logger.debug(f"Clock hours calculated: {self.stored_hours}")
+            # When clocking in, just set clock_in and don't calculate hours yet
+            elif self.clock_in and not self.clock_out:
+                logger.debug("Clocking in - storing clock_in time only")
             else:
-                raise ValueError("Clock entry type requires clock_in and clock_out")
+                raise ValueError("Clock entry type requires clock_in")
         elif self.entry_type == 'time_range':
             if self.start_time and self.end_time:
                 duration = self.end_time - self.start_time
@@ -131,24 +135,24 @@ class WorkSession(models.Model):
         logger.debug(f"Final stored hours: {self.stored_hours}")
         logger.debug(f"Task price: {self.task.price}, Task hourly_rate: {self.task.hourly_rate}")
         
-        # Calculate student billing amount (0 for free tasks)
-        if self.task.price == 0 or self.task.price == Decimal('0.00'):
-            logger.debug("Free task for student - setting student total_amount to 0")
-            self.total_amount = Decimal('0.00')
+        # Only calculate amounts if we have stored hours (which means we've clocked out)
+        if self.stored_hours is not None and self.stored_hours > 0:
+            # Calculate student billing amount (0 for free tasks)
+            if self.task.price == 0 or self.task.price == Decimal('0.00'):
+                logger.debug("Free task for student - setting student total_amount to 0")
+                self.total_amount = Decimal('0.00')
+            else:
+                # Calculate total amount for paid tasks (student billing)
+                self.total_amount = self.stored_hours * self.hourly_rate  # Use hourly_rate for student billing
+                logger.debug(f"Calculated student total amount: {self.total_amount}")
+            
+            # Calculate teacher payment amount (always based on hourly_rate)
+            if self.hourly_rate is not None:
+                self.teacher_payment_amount = self.stored_hours * self.hourly_rate
+                logger.debug(f"Calculated teacher payment amount: {self.teacher_payment_amount}")
         else:
-            # Calculate total amount for paid tasks (student billing)
-            if self.stored_hours is None or self.stored_hours == 0 or self.stored_hours == Decimal('0.00'):
-                logger.debug("Stored hours is invalid")
-                raise ValueError("Hours must be a positive number")
-            self.total_amount = self.stored_hours * self.hourly_rate  # Use hourly_rate for student billing
-            logger.debug(f"Calculated student total amount: {self.total_amount}")
-        
-        # Calculate teacher payment amount (always based on hourly_rate)
-        if self.stored_hours is not None and self.hourly_rate is not None:
-            self.teacher_payment_amount = self.stored_hours * self.hourly_rate
-            logger.debug(f"Calculated teacher payment amount: {self.teacher_payment_amount}")
-        else:
-            logger.debug("No teacher payment calculated - invalid hours or hourly_rate")
+            logger.debug("Not calculating amounts - either no hours stored or hours not positive")
+            self.total_amount = None
             self.teacher_payment_amount = None
         
         super().save(*args, **kwargs)

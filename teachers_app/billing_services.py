@@ -29,26 +29,29 @@ class StudentBillingService:
         # Log the incoming work session data
         logger.debug(f"Processing work session: {work_session.task.name}, price: {work_session.task.price}, hours: {work_session.stored_hours}")
         
-        # Only proceed if the work session has a student
-        if not work_session.student:
-            logger.debug("No student associated with work session - returning None")
-            return None
+        # Only create bill item if we have a student AND stored_hours is not None
+        if work_session.student and work_session.stored_hours is not None:
+            # Get task price and stored hours
+            service_price = work_session.task.price
+            quantity = work_session.stored_hours
             
-        # Get task price and stored hours
-        service_price = work_session.task.price
-        quantity = work_session.stored_hours
-        
-        # Calculate bill amount (0 for free tasks)
-        amount = service_price * quantity if service_price > 0 else Decimal('0.00')
-        logger.debug(f"Calculated bill amount: {amount} (type: {type(amount)})")
-        
-        # Skip bill item creation for free tasks
-        if amount == 0 or amount == Decimal('0.00'):
-            logger.debug("Free task - skipping bill item creation")
-            return None
+            # Calculate bill amount (0 for free tasks)
+            amount = service_price * quantity if service_price > 0 else Decimal('0.00')
+            logger.debug(f"Calculated bill amount: {amount} (type: {type(amount)})")
             
-        # Determine the billing month (first day of the session's month)
-        session_date = work_session.created_at.date() if work_session.created_at else date.today()
+            # Skip bill item creation for free tasks
+            if amount == 0 or amount == Decimal('0.00'):
+                logger.debug("Free task - skipping bill item creation")
+                return None
+            
+            # Determine the billing month (first day of the session's month)
+            session_date = work_session.created_at.date() if work_session.created_at else date.today()
+            
+            # Rest of the bill item creation logic...
+            
+        # If no student or not clocked out yet, just return None
+        logger.debug("No bill item created - either no student or hours not calculated yet")
+        return None
         billing_month = session_date.replace(day=1)
         
         # Find or create the Bill for this student and month
