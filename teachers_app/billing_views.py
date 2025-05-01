@@ -86,9 +86,20 @@ def create_bill(request, student_id):
             amount__gt=0
         ).aggregate(total=Sum('amount'))['total'] or 0
 
-        work_sessions_total = work_sessions.aggregate(total=Sum('total_amount'))['total'] or 0
+        # Calculate work sessions totals separately for student and teacher
+        student_work_sessions_total = work_sessions.aggregate(total=Sum('total_amount'))['total'] or 0
+        teacher_work_sessions_total = work_sessions.aggregate(teacher_total=Sum('teacher_payment_amount'))['teacher_total'] or 0
 
-        bill.total_amount = bill_items_total + work_sessions_total
+        # Bill total should be the sum of bill items and student work sessions
+        bill.total_amount = bill_items_total + student_work_sessions_total
+        bill.save()
+
+        # Debug logging
+        print("=== Bill Creation Details ===")
+        print(f"Bill items total: {bill_items_total}")
+        print(f"Student work sessions total: {student_work_sessions_total}")
+        print(f"Teacher work sessions total: {teacher_work_sessions_total}")
+        print(f"Final bill total: {bill.total_amount}")
         bill.save()
 
         messages.success(request, f'Bill successfully created for {student} for {selected_month.strftime("%B %Y")}!')
