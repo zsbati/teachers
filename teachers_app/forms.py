@@ -1,5 +1,6 @@
 from django import forms
 from django.contrib.auth.forms import PasswordChangeForm, UserCreationForm
+from django.utils import timezone
 from .models import Teacher, CustomUser, Task, WorkSession, SalaryReport, Student, Service
 from .billing_models import BillItem
 
@@ -310,6 +311,12 @@ class SalaryReportForm(forms.Form):
         label="Notes",
         widget=forms.Textarea(attrs={"class": "form-control", "rows": 3})
     )
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Set default values to current year and month
+        self.initial['year'] = timezone.now().year
+        self.initial['month'] = timezone.now().month
 
 
 class BillItemForm(forms.ModelForm):
