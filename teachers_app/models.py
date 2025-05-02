@@ -143,7 +143,7 @@ class WorkSession(models.Model):
                 self.total_amount = Decimal('0.00')
             else:
                 # Calculate total amount for paid tasks (student billing)
-                self.total_amount = self.stored_hours * self.hourly_rate  # Use hourly_rate for student billing
+                self.total_amount = self.stored_hours * self.task.price  # Use hourly_rate for student billing
                 logger.debug(f"Calculated student total amount: {self.total_amount}")
             
             # Calculate teacher payment amount (always based on hourly_rate)
