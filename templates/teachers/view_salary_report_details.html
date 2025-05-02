@@ -23,14 +23,14 @@
                         <div class="col-md-6">
                             <h4>Report Details</h4>
                             <p><strong>Period:</strong> {{ report.start_date|date:"F Y" }}</p>
-                            <p><strong>Total Salary:</strong> ${{ report_data.total_salary|floatformat:2 }}</p>
+                            <p><strong>Total Salary:</strong> €{{ report_data.total_salary|floatformat:2 }}</p>
                             <p><strong>Created By:</strong> {{ report.created_by.username }}</p>
                             <p><strong>Created At:</strong> {{ report.created_at|date:"Y-m-d H:i" }}</p>
                         </div>
                         <div class="col-md-6">
                             <h4>Report Overview</h4>
                             <p><strong>Total Hours:</strong> {{ report_data.total_hours|floatformat:2 }}</p>
-                            <p><strong>Hourly Rate:</strong> ${{ report_data.hourly_rate|floatformat:2 }}/hr</p>
+                            <p><strong>Hourly Rate:</strong> €{{ report_data.hourly_rate|floatformat:2 }}/hr</p>
                         </div>
                     </div>
 
@@ -80,8 +80,8 @@
                             <td>{% if session.end_time %}{{ session.end_time|date:"Y-m-d H:i:s" }}{% else %}N/A{% endif %}</td>
                             <td>{% if session.calculated_hours %}{{ session.calculated_hours|floatformat:2 }}{% else %}N/A{% endif %}</td>
                             <td>{{ session.task.name }}</td>
-                            <td>${{ session.hourly_rate|floatformat:2 }}/hr</td>
-                            <td>${{ session.total_amount }}</td>
+                            <td>€{{ session.hourly_rate|floatformat:2 }}/hr</td>
+                            <td>€{{ session.total_amount }}</td>
                             <td>{% if session.student %}{{ session.student }}{% else %}<em>No student assigned</em>{% endif %}</td>
                             {% if request.user.is_superuser %}
                             <td>

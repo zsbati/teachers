@@ -24,7 +24,7 @@
                     <tr>
                         <td>{{ item.report.start_date|date:"F Y" }}</td>
                         <td>{{ item.report.total_hours }}</td>
-                        <td>${{ item.total_salary }}</td>
+                        <td>€{{ item.total_salary }}</td>
                         <td>{{ item.report.created_at|date:"Y-m-d" }}</td>
                         <td>
                             <a href="{% url 'teacher_view_salary_report' teacher_id=request.user.teacher.id year=item.report.start_date|date:'Y' month=item.report.start_date|date:'n' %}" 

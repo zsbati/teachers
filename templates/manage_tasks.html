@@ -54,7 +54,7 @@
                                 {% for task in tasks %}
                                     <tr>
                                         <td>{{ task.name }}</td>
-                                        <td>${{ task.hourly_rate }}</td>
+                                        <td>€{{ task.hourly_rate }}</td>
                                         <td>{{ task.description|truncatechars:50 }}</td>
                                         <td>
                                             <a href="{% url 'edit_task' task.id %}" class="btn btn-warning btn-sm">Edit</a>

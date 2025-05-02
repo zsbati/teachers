@@ -57,7 +57,7 @@
                         <div class="card-body">
                             <h5 class="card-title">Bill Summary</h5>
                             <p>Total Hours: {{ total_hours }}</p>
-                            <p>Total Amount: ${{ bill.total_amount }}</p>
+                            <p>Total Amount: €{{ bill.total_amount }}</p>
                         </div>
                     </div>
                 </div>
@@ -89,9 +89,9 @@
                                     <td>Bill Item</td>
                                     <td>{{ item.service_name }}</td>
                                     <td>{{ item.service_description|default:'-' }}</td>
-                                    <td>${{ item.service_price_at_billing|floatformat:2 }}</td>
+                                    <td>€{{ item.service_price_at_billing|floatformat:2 }}</td>
                                     <td>{{ item.quantity|floatformat:0 }}</td>
-                                    <td>${{ item.amount|floatformat:2 }}</td>
+                                    <td>€{{ item.amount|floatformat:2 }}</td>
                                 </tr>
                                 {% endfor %}
                                 {% else %}
@@ -137,9 +137,9 @@
                                     <td>{{ session.task.name }}</td>
                                     <td>{{ session.task.description|default:'-' }}</td>
                                     <td>{{ session.teacher }}</td>
-                                    <td>${{ session.task.price|floatformat:2 }}/hr</td>
+                                    <td>€{{ session.task.price|floatformat:2 }}/hr</td>
                                     <td>{{ session.stored_hours|floatformat:2 }} hours</td>
-                                    <td>${{ session.total_amount|floatformat:2 }}</td>
+                                    <td>€{{ session.total_amount|floatformat:2 }}</td>
                                 </tr>
                                 {% endfor %}
                                 {% else %}

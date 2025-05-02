@@ -49,12 +49,12 @@
                         <tbody>
                             {% for session in report_data.session_details %}
                             <tr>
-                                <td>{{ session.date }}</td>
-                                <td>{{ session.time }}</td>
-                                <td>{{ session.task_name }}</td>
+                                <td>{{ session.date|date:"Y-m-d" }}</td>
+                                <td>{{ session.date|time:"H:i" }}</td>
+                                <td>{{ session.task }}</td>
                                 <td>{{ session.hours|floatformat:2 }}</td>
-                                <td>${{ session.rate|floatformat:2 }}/hr</td>
-                                <td>${{ session.total|floatformat:2 }}</td>
+                                <td>€{{ session.rate|floatformat:2 }}/hr</td>
+                                <td>€{{ session.amount|floatformat:2 }}</td>
                                 <td>{{ session.entry_type }}</td>
                                 <td><small class="text-muted">{{ session.notes }}</small></td>
                             </tr>

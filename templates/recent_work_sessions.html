@@ -40,8 +40,8 @@
                     <!-- Total Time (Hours) -->
                     <td>{% if session.calculated_hours %}{{ session.calculated_hours|floatformat:2 }}{% else %}N/A{% endif %}</td>
                     <td>{{ session.task.name }}</td>
-                    <td>${{ session.hourly_rate|floatformat:2 }}/hr</td>
-                    <td>${{ session.total_amount }}</td>
+                    <td>€{{ session.hourly_rate|floatformat:2 }}/hr</td>
+                    <td>€{{ session.total_amount }}</td>
                     <td>{% if session.student %}{{ session.student }}{% else %}<em>No student assigned</em>{% endif %}</td>
                     {% if request.user.is_superuser %}
                     <td>

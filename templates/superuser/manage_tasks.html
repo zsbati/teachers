@@ -72,8 +72,8 @@
                                 {% for task in tasks %}
                                 <tr>
                                     <td>{{ task.name }}</td>
-                                    <td>${{ task.hourly_rate }}</td>
-                                    <td>${{ task.price }}</td>
+                                    <td>€{{ task.hourly_rate }}</td>
+                                    <td>€{{ task.price }}</td>
                                     <td>{{ task.description|default:"Not specified"|truncatewords:10 }}</td>
                                     {% if user.is_superuser %}
                                     <td>

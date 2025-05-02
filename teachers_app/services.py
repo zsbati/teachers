@@ -48,6 +48,8 @@ class SalaryCalculationService:
                 'hours': str(rounded_hours),
                 'rate': str(rate),
                 'amount': str(task_total),
+                'entry_type': session.get_entry_type_display(),
+                'notes': session.task.description if session.task.description else ''
             })
 
         return {

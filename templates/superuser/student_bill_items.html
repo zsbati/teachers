@@ -33,9 +33,9 @@
                                 <td>{{ record.service_name }}</td>
                                 <td>{{ record.service_description|default:'-' }}</td>
                                 <td>-</td>
-                                <td>${{ record.service_price_at_billing|floatformat:2 }}</td>
+                                <td>€{{ record.service_price_at_billing|floatformat:2 }}</td>
                                 <td>{{ record.quantity|floatformat:0 }}</td>
-                                <td>${{ record.amount|floatformat:2 }}</td>
+                                <td>€{{ record.amount|floatformat:2 }}</td>
                                 {% if request.user.is_superuser %}
                                 <td>
                                     <a href="{% url 'edit_bill_item' record.id %}" class="btn btn-sm btn-primary">Edit</a>
@@ -50,9 +50,9 @@
                                 <td>{{ record.task.name }}</td>
                                 <td>{{ record.task.description|default:'-' }}</td>
                                 <td>{{ record.teacher }}</td>
-                                <td>${{ record.task.price|floatformat:2 }}/hr</td>
+                                <td>€{{ record.task.price|floatformat:2 }}/hr</td>
                                 <td>{{ record.calculated_hours|floatformat:2 }} hours</td>
-                                <td>${{ record.total_amount|floatformat:2 }}</td>
+                                <td>€{{ record.total_amount|floatformat:2 }}</td>
                                 {% if request.user.is_superuser %}
                                 <td>
                                     <a href="{% url 'edit_work_session' record.id %}" class="btn btn-sm btn-primary">Edit</a>

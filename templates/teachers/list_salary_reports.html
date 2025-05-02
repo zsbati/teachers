@@ -25,7 +25,7 @@
                                 {% for item in reports %}
                                 <tr>
                                     <td>{{ item.report.start_date|date:"F Y" }}</td>
-                                    <td>${{ item.total_salary|floatformat:2 }}</td>
+                                    <td>€{{ item.total_salary|floatformat:2 }}</td>
                                     <td>{{ item.report.created_by.username }}</td>
                                     <td>{{ item.report.created_at|date:"Y-m-d H:i" }}</td>
                                     <td>
