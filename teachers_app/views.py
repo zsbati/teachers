@@ -8,6 +8,7 @@ from django.db.models import Sum
 from django.db.models.functions import Coalesce
 from django.core.exceptions import PermissionDenied
 from django.http import Http404, HttpResponseForbidden
+from django.contrib.auth.decorators import login_required
 
 # Import models from models.py
 from .models import Task, WorkSession, Teacher, Student, CustomUser, SalaryReport, Inspector

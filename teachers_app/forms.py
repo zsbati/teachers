@@ -75,13 +75,14 @@ class WorkSessionManualForm(forms.ModelForm):
         widgets = {
             'task': forms.Select(attrs={'class': 'form-control'}),
             'manual_hours': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.5'}),
-            'student': forms.Select(attrs={'class': 'form-control'}),
+            'student': forms.Select(attrs={'class': 'form-control select2'}),
         }
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.fields['manual_hours'].label = 'Hours Worked'
-        self.fields['student'].queryset = Student.objects.all()  
+        self.fields['student'].queryset = Student.objects.all()
+        self.fields['student'].required = False  # Make the field optional
         print("Student widget in WorkSessionManualForm:", type(self.fields['student'].widget))
 
     def clean(self):
@@ -104,12 +105,13 @@ class WorkSessionClockForm(forms.ModelForm):
         fields = ['task', 'student']
         widgets = {
             'task': forms.Select(attrs={'class': 'form-control'}),
-            'student': forms.Select(attrs={'class': 'form-control'}),
+            'student': forms.Select(attrs={'class': 'form-control select2'}),
         }
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.fields['student'].queryset = Student.objects.all()
+        self.fields['student'].required = False  # Make the field optional
         print("Student widget in WorkSessionClockForm:", type(self.fields['student'].widget))
 
 class WorkSessionTimeRangeForm(forms.ModelForm):
@@ -119,12 +121,13 @@ class WorkSessionTimeRangeForm(forms.ModelForm):
         widgets = {
             'start_time': forms.DateTimeInput(attrs={'type': 'datetime-local'}),
             'end_time': forms.DateTimeInput(attrs={'type': 'datetime-local'}),
-            'student': forms.Select(attrs={'class': 'form-control'}),
+            'student': forms.Select(attrs={'class': 'form-control select2'}),
         }
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.fields['student'].queryset = Student.objects.all()
+        self.fields['student'].required = False  # Make the field optional
         print("Student widget in WorkSessionTimeRangeForm:", type(self.fields['student'].widget))
 
 class WorkSessionFilterForm(forms.Form):

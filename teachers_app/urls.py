@@ -3,6 +3,7 @@ from django.contrib.auth import views as auth_views
 from . import views, billing_views, salary_views
 from .service_views import manage_services, add_service, edit_service, delete_service
 
+
 urlpatterns = [
     path('superuser/manage-services/', manage_services, name='manage_services'),
     path('superuser/add-service/', add_service, name='add_service'),
@@ -29,6 +30,7 @@ urlpatterns = [
          name='change_teacher_password'),
     path('add-teacher/', views.add_teacher, name='add_teacher'),
     path('superuser/manage-tasks/', views.manage_tasks, name='manage_tasks'),
+
     path('edit-task/<int:task_id>/', views.edit_task, name='edit_task'),
     path('remove-task/<int:task_id>/', views.remove_task, name='remove_task'),
     path('superuser/manage-students/', views.manage_students, name='manage_students'),
