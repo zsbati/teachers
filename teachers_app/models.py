@@ -143,13 +143,15 @@ class WorkSession(models.Model):
                 self.total_amount = Decimal('0.00')
             else:
                 # Calculate total amount for paid tasks (student billing)
-                self.total_amount = self.stored_hours * self.task.price  # Use hourly_rate for student billing
-                logger.debug(f"Calculated student total amount: {self.total_amount}")
+                # Using task.price for student billing (what the student is charged)
+                self.total_amount = self.stored_hours * self.task.price
+                logger.debug(f"Calculated student total amount: {self.total_amount} (rate: {self.task.price} * hours: {self.stored_hours})")
             
             # Calculate teacher payment amount (always based on hourly_rate)
             if self.hourly_rate is not None:
                 self.teacher_payment_amount = self.stored_hours * self.hourly_rate
-                logger.debug(f"Calculated teacher payment amount: {self.teacher_payment_amount}")
+                logger.debug(f"Calculated teacher payment amount: {self.teacher_payment_amount} (rate: {self.hourly_rate} * hours: {self.stored_hours})")
+                logger.debug(f"Student was charged: {self.total_amount} (profit: {self.total_amount - self.teacher_payment_amount if self.total_amount is not None else 'N/A'})")
         else:
             logger.debug("Not calculating amounts - either no hours stored or hours not positive")
             self.total_amount = None
@@ -192,9 +194,12 @@ class WorkSession(models.Model):
 
     @property
     def calculated_amount(self):
-        """Calculate amount using stored values"""
-        if self.stored_hours and self.hourly_rate:
-            return self.stored_hours * self.hourly_rate
+        """
+        Calculate the total amount to bill the student.
+        Uses task.price (student's rate) instead of hourly_rate (teacher's rate).
+        """
+        if self.stored_hours and self.task and self.task.price:
+            return self.stored_hours * self.task.price
         return None
 
     def calculated_hours(self):
