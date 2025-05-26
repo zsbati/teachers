@@ -48,6 +48,9 @@ local_settings.py
 *.pyo
 *.pyd
 
+# Environment variables
+.env
+
 # Database
 *.sqlite3
 *.sqlite3-journal
