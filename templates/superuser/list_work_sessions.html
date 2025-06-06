@@ -18,8 +18,8 @@
                                 <th>Date</th>
                                 <th>Task</th>
                                 <th>Hours</th>
-                                <th>Rate</th>
-                                <th>Total</th>
+                                <th>Teacher Rate</th>
+                                <th>Teacher Payment</th>
                                 <th>Entry Type</th>
                                 <th>Teacher</th>
                                 <th>Student</th>
@@ -32,8 +32,8 @@
                                 <td>{{ session.start_time|date:"Y-m-d" }}</td>
                                 <td>{{ session.task.name }}</td>
                                 <td>{{ session.calculated_hours|floatformat:2 }}</td>
-                                <td>€{{ session.task.hourly_rate|floatformat:2 }}/hr</td>
-                                <td>€{{ session.total_amount|floatformat:2 }}</td>
+                                <td>€{{ session.hourly_rate|floatformat:2 }}/hr</td>
+                                <td>€{{ session.teacher_payment_amount|floatformat:2 }}</td>
                                 <td>{{ session.entry_type }}</td>
                                 <td>{{ session.teacher.user.username }}</td>
                                 <td>{% if session.student %}{{ session.student }}{% else %}<em>No student assigned</em>{% endif %}</td>

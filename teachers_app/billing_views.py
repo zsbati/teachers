@@ -19,8 +19,9 @@ def create_bill(request, student_id):
     student = get_object_or_404(Student, pk=student_id)
 
     # Get month/year from URL parameters, default to current
-    month = int(request.GET.get('month', '4'))  # Default to April
-    year = int(request.GET.get('year', '2025'))  # Default to 2025
+    today = timezone.now()
+    month = int(request.GET.get('month', today.month))  # Default to current month
+    year = int(request.GET.get('year', today.year))  # Default to current year
     selected_month = datetime(year, month, 1)
 
     # Get existing bill for this month if it exists
@@ -157,9 +158,10 @@ def create_bill_final(request, student_id):
     """Create a final bill for a student"""
     student = get_object_or_404(Student, pk=student_id)
 
-    # Get month/year from URL parameters
-    month = int(request.GET.get('month', '4'))  # Default to April
-    year = int(request.GET.get('year', '2025'))  # Default to 2025
+    # Get month/year from URL parameters, default to current
+    today = timezone.now()
+    month = int(request.GET.get('month', today.month))  # Default to current month
+    year = int(request.GET.get('year', today.year))  # Default to current year
     selected_month = datetime(year, month, 1)
 
     # Get existing bill for this month

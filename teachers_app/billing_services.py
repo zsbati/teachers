@@ -47,41 +47,41 @@ class StudentBillingService:
             # Determine the billing month (first day of the session's month)
             session_date = work_session.created_at.date() if work_session.created_at else date.today()
             
-            # Rest of the bill item creation logic...
+            # Calculate billing month (first day of the session's month)
+            billing_month = session_date.replace(day=1)
+            
+            # Find or create the Bill for this student and month
+            bill, created = Bill.objects.get_or_create(
+                student=work_session.student,
+                month=billing_month,
+                defaults={
+                    'total_amount': 0,
+                }
+            )
+            
+            # Create the BillItem
+            bill_item = BillItem.objects.create(
+                bill=bill,
+                service_name=work_session.task.name,
+                service_description=work_session.task.description or '',
+                service_price_at_billing=service_price,
+                quantity=quantity,
+                amount=amount
+            )
+            
+            # Update the Bill's total amount
+            bill.total_amount = BillItem.objects.filter(
+                bill=bill,
+                service_price_at_billing__gt=0,
+                amount__gt=0
+            ).aggregate(
+                total=models.Sum('amount', default=0)
+            )['total']
+            bill.save()
+            
+            return bill_item
             
         # If no student or not clocked out yet, just return None
         logger.debug("No bill item created - either no student or hours not calculated yet")
         return None
-        billing_month = session_date.replace(day=1)
-        
-        # Find or create the Bill for this student and month
-        bill, created = Bill.objects.get_or_create(
-            student=work_session.student,
-            month=billing_month,
-            defaults={
-                'total_amount': 0,
-            }
-        )
-        
-        # Create the BillItem
-        bill_item = BillItem.objects.create(
-            bill=bill,
-            service_name=work_session.task.name,
-            service_description=work_session.task.description or '',
-            service_price_at_billing=service_price,
-            quantity=quantity,
-            amount=amount
-        )
-        
-        # Update the Bill's total amount
-        bill.total_amount = BillItem.objects.filter(
-            bill=bill,
-            service_price_at_billing__gt=0,
-            amount__gt=0
-        ).aggregate(
-            total=models.Sum('amount', default=0)
-        )['total']
-        bill.save()
-        
-        return bill_item
         
