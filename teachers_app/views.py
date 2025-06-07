@@ -423,11 +423,11 @@ def edit_work_session(request, session_id):
 @user_passes_test(lambda u: u.is_superuser)
 def delete_work_session(request, session_id):
     session = get_object_or_404(WorkSession, id=session_id)
-    student_id = session.student_id
     if request.method == "POST":
         session.delete()
         messages.success(request, 'Work session deleted successfully.')
-        return redirect('student_bill_items', student_id=student_id)
+        # Redirect back to the previous page
+        return redirect(request.META.get('HTTP_REFERER', 'list_work_sessions'))
     
     context = {
         'session': session
